@@ -12,21 +12,25 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+
+base = environ.Path(__file__) - 2 # two folders back (/a/b/ - 2 = /)
+environ.Env.read_env(env_file=base('django.env')) # reading .env file
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'm&66a4$(n1m+a*&u^!5#^y^^kw=1azxu@fra10ps63evf6c#n='
+SECRET_KEY = os.environ.get("MYSITE_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -82,7 +86,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',        # Database name
         'USER': 'postgres',        # Database user
-        'PASSWORD': 'postgres',    # Database password
+        'PASSWORD': '8JXqx16LfvBu',    # Database password
         'HOST': 'pgdb',            # PostgreSQL service name in Docker Compose
         'PORT': '5432',            # PostgreSQL default port
     },
@@ -116,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Los_Angeles'
 
 USE_I18N = True
 
@@ -132,3 +136,87 @@ STATIC_URL = '/static/'
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+
+from celery.schedules import crontab
+
+environment = os.environ.get("DB")
+print("environment "+ environment)
+
+if environment == "prodcluster":
+    CELERY_BEAT_SCHEDULE = {
+        "process_emails":{
+            "task": "process_ticket_emails",
+            "schedule": crontab(minute="*/2")
+        },
+        "pagerduty":{
+            "task":"pagerduty",
+            "schedule": crontab(minute="*/2")
+        },
+        "request_tickets_emails":{
+            "task": "request_tickets_emails",
+            "schedule": crontab(minute="*/2")
+        },
+        "daily_ticket_report":{
+            "task": "daily_tickets_report",
+            "schedule": crontab(hour=1, minute=0)
+        },
+        "nri_email": {
+            "task": "nri_email",
+            "schedule": crontab(hour=11, minute=1)
+        },
+        "ninja_one_dump":{
+            "task": "ninja_one_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "idassets":{
+            "task": "id_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "auvik_dump":{
+            "task": "auvik_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "asset_dump": {
+            "task": "asset_dump",
+            "schedule": crontab(hour=2, minute=0)
+        },
+        "access_ticket_provisions": {
+            "task": "access_ticket_provisions",
+            "schedule": crontab(minute="*/1")
+        },
+        "cisa_repot": {
+            "task": "cisa_report",
+            "schedule": crontab(hour=8, minute=1)
+        },
+        "clear_temp_s3": {
+            "task": "clear_temp_s3",
+            "schedule": crontab(hour=11, minute=1)
+        }
+    }
+else:
+    CELERY_BEAT_SCHEDULE = {
+        "list_time": {
+            "task": "list_time",
+            "schedule": crontab(minute="*/1")
+        },
+        "ninja_one_dump":{
+            "task": "ninja_one_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "idassets":{
+            "task": "id_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "auvik_dump":{
+            "task": "auvik_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "asset_dump": {
+            "task": "asset_dump",
+            "schedule": crontab(hour=2, minute=0)
+        },
+        "sync_db": {
+            "task": "sync_db",
+            "schedule": crontab(hour=10, minute=35)
+        }
+    }
