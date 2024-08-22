@@ -3,9 +3,6 @@ psycopg2-binary>=2.8
 celery
 redis
 djangorestframework
-django-celery-beat
-django-celery-results
-djangorestframework
 pymongo
 django-environ
 fiscalyear
