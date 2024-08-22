@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Los_Angeles'
 
 USE_I18N = True
 
@@ -131,3 +131,87 @@ STATIC_URL = '/static/'
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_TIMEZONE = "US/Pacific"
+environment = os.environ.get("DB")
+print("environment "+ environment)
+
+from celery.schedules import crontab
+
+if environment == "prodcluster":
+    CELERY_BEAT_SCHEDULE = {
+        "process_emails":{
+            "task": "process_ticket_emails",
+            "schedule": crontab(minute="*/2")
+        },
+        "pagerduty":{
+            "task":"pagerduty",
+            "schedule": crontab(minute="*/2")
+        },
+        "request_tickets_emails":{
+            "task": "request_tickets_emails",
+            "schedule": crontab(minute="*/2")
+        },
+        "daily_ticket_report":{
+            "task": "daily_tickets_report",
+            "schedule": crontab(hour=1, minute=0)
+        },
+        "nri_email": {
+            "task": "nri_email",
+            "schedule": crontab(hour=11, minute=1)
+        },
+        "ninja_one_dump":{
+            "task": "ninja_one_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "idassets":{
+            "task": "id_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "auvik_dump":{
+            "task": "auvik_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "asset_dump": {
+            "task": "asset_dump",
+            "schedule": crontab(hour=2, minute=0)
+        },
+        "access_ticket_provisions": {
+            "task": "access_ticket_provisions",
+            "schedule": crontab(minute="*/1")
+        },
+        "cisa_repot": {
+            "task": "cisa_report",
+            "schedule": crontab(hour=8, minute=1)
+        },
+        "clear_temp_s3": {
+            "task": "clear_temp_s3",
+            "schedule": crontab(hour=11, minute=1)
+        }
+    }
+else:
+    CELERY_BEAT_SCHEDULE = {
+        "list_time": {
+            "task": "list_time",
+            "schedule": crontab(minute="*/1")
+        },
+        "ninja_one_dump":{
+            "task": "ninja_one_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "idassets":{
+            "task": "id_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "auvik_dump":{
+            "task": "auvik_dump",
+            "schedule": crontab(hour=22, minute=0)
+        },
+        "asset_dump": {
+            "task": "asset_dump",
+            "schedule": crontab(hour=2, minute=0)
+        },
+        "sync_db": {
+            "task": "sync_db",
+            "schedule": crontab(hour=10, minute=35)
+        }
+    }
