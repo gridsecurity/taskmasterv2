@@ -1,0 +1,40 @@
+{% extends 'dashboard/base.html' %}
+{% block body %}
+{% load static %}
+<script src="/static/network/dataTable.js"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'network/style.css' %}">
+<div class="container" style="overflow-y:scroll">
+  <div class="card blue-grey darken-3">
+    <div class="card-content">
+      <table id="table_id" class="cell-border compact stripe">
+        <thead>
+          <tr>
+            <th> Resend </th>
+            <th> Status </th>
+            <th> Sent Date </th>
+            <th> Email </th>
+            <th> Subject </th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for item in emails %}
+        <tr>
+          <td>
+            <form action="/emailadmin/resend/" id="edit" method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="id" value="{{ item.id }}">
+              <button type="submit" class="btn waves-effect waves-light">Resend<i class="material-icons">email</i></button>
+            </form>
+          </td>
+          <td> {{ item.status }} </td>
+          <td> {{ item.sentDate }} </td>
+          <td> {{ item.target }} </td>
+          <td> {{ item.subject }} </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock body %}

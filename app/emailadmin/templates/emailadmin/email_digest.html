@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0;">
+    <table border="0" cellpadding="0" cellspacing="0" style="border: 1px solid #cccccc; border-collapse: collapse;">
+        <tr>
+            <td  width="100%"align="center" bgcolor="#ff8c00" style="color: #153643; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;">
+              <b>Daily Digest</b>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#f7f7f9" style="padding: 30px 40px 30px 40px;">
+                <h3>Access / TCA / RM Tickets</h3>
+                <table class="dcf-table dcf-table-responsive dcf-table-bordered dcf-w-100%" border="1" cellpadding="1" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <td>Number</td>
+                            <td>Status</td>
+                            <td>Start Date</td>
+                            <td>End Date</td>
+                            <td>Name</td>
+                            <td>Sites</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in access_tickets %}
+                        <tr>
+                            <td>{{ i.number }}</td>
+                            <td>{{ i.status }}</td>
+                            <td>{{i.startDate }}</td>
+                            <td>{{ i.endDate }}</td>
+                            <td>{{ i.name }}</td>
+                            <td>{{ i.sites }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#f7f7f9" style="padding: 30px 40px 30px 40px;">
+                <h3>Change Tickets</h3>
+                <table class="dcf-table dcf-table-responsive dcf-table-bordered dcf-w-100%" border="1" cellpadding="1" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <td>Number</td>
+                            <td>Status</td>
+                            <td>Start Date</td>
+                            <td>End Date</td>
+                            <td>Name</td>
+                            <td>Sites</td>
+                            <td>Updated Date</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in change_tickets %}
+                        <tr>
+                            <td>{{ i.number }}</td>
+                            <td>{{ i.status }}</td>
+                            <td>{{ i.startDate }}</td>
+                            <td>{{ i.endDate }}</td>
+                            <td>{{ i.name }}</td>
+                            <td>{{ i.sites }}</td>
+                            <td>{{ i.updated }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#f7f7f9" style="padding: 30px 40px 30px 40px;">
+                <h3>Incident Tickets</h3>
+                <table class="dcf-table dcf-table-responsive dcf-table-bordered dcf-w-100%" border="1" cellpadding="1" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <td>Number</td>
+                            <td>Status</td>
+                            <td>Subject</td>
+                            <td>Sites</td>
+                            <td>Updated Date</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in incident_tickets %}
+                        <tr>
+                            <td>{{ i.number }}</td>
+                            <td>{{ i.status }}</td>
+                            <td>{{ i.subject }}</td>
+                            <td>{{ i.sites }}</td>
+                            <td>{{ i.updated }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+
+        
+    
+    </table>
+</body>

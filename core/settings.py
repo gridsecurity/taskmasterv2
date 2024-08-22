@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'celerytasks',
+    'emailadmin',
 ]
 
 MIDDLEWARE = [
@@ -81,16 +82,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',        # Database name
-        'USER': 'postgres',        # Database user
-        'PASSWORD': '8JXqx16LfvBu',    # Database password
-        'HOST': 'pgdb',            # PostgreSQL service name in Docker Compose
-        'PORT': '5432',            # PostgreSQL default port
-    },
-    'db2': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
