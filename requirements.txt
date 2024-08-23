@@ -2,7 +2,8 @@ Django>=3.0,<4.0
 psycopg2-binary>=2.8
 django-celery-beat
 django-celery-results
-celery[redis]
+celery
+redis
 djangorestframework
 pymongo
 django-environ
