@@ -140,11 +140,11 @@ print("environment "+ environment)
 from celery.schedules import crontab
 
 # from celery.schedules import crontab
-CELERY_BEAT_SCHEDULER = {
-    "list_time": {
-        "task": "list_time",
-        "schedule": crontab(minute="*/1")
-    }
+CELERY_BEAT_SCHEDULE = {
+    'queue_every_five_mins': {
+        'task': 'list_time',
+        'schedule': crontab(minute="*/1"),
+    },
 }
 
 # if environment == "prodcluster":
