@@ -138,8 +138,6 @@ CELERY_TIMEZONE = "US/Pacific"
 environment = os.environ.get("DB")
 print("environment "+ environment)
 from celery.schedules import crontab
-
-# from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     'queue_every_five_mins': {
         'task': 'list_time',
