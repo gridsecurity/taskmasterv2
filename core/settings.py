@@ -130,10 +130,18 @@ CELERY_BEAT_SCHEDULER="django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_TIMEZONE = "US/Pacific"
+
 environment = os.environ.get("DB")
 print("environment "+ environment)
+from celery.schedules import crontab
 
 # from celery.schedules import crontab
+CELERY_BEAT_SCHEDULER = {
+    "list_time": {
+        "task": "list_time",
+        "schedule": crontab(minute="*/1")
+    }
+}
 
 # if environment == "prodcluster":
 #     CELERY_BEAT_SCHEDULE = {
