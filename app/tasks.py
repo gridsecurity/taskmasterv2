@@ -1,15 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 from celery import shared_task
-from celery.decorators import periodic_task
-from celery.schedules import crontab
 from core.celery import app 
 import time
 from datetime import datetime
-
-@periodic_task(run_every=(crontab(minute="*/1")),)
-def my_task():
-    print("listing time {}".format(datetime.today()))
 
 @app.task
 def fibonacci(n):
