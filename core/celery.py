@@ -14,11 +14,13 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.autodiscover_tasks()
 
-@app.on_after_configure.connect
-def set_up_periodic_tasks(sender, **kwargs):
-    print("adding periodic tasks")
-    sender.add_periodic_task(1, test.s('hello'), name='add every 10')
-
-@app.task
-def test(arg):
-    print(arg)
+print("adding periodic tasks")
+app.conf.beat_schedule = {
+    # Executes every Monday morning at 7:30 a.m.
+    'add-every-monday-morning': {
+        'task': 'tasks.add',
+        'schedule': crontab(minute="*/1"),
+        'args': (16, 16),
+    },
+}
+print("added periodic tasks")
