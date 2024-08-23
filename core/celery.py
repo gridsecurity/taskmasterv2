@@ -17,8 +17,8 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'add-every-30-seconds': {
-        'task': 'app.tasks.fibonacci',
-        'schedule': 30.0,
+        'task': 'list_time',
+        'schedule': 1.0,
         'args': (16, 16)
     },
 }
