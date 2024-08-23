@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from core.celery import app 
 import time
+from datetime import datetime
 
 @app.task
 def fibonacci(n):
@@ -19,16 +20,8 @@ def fibonacci(n):
         return ', '.join(map(str, fib_sequence))
 
 @shared_task
-def factorial(n):
-    if n < 0:
-        return "Invalid input"
-    elif n == 0 or n == 1:
-        return "1"
-    else:
-        result = 1
-        for i in range(2, n + 1):
-            result *= i
-        return str(result)
+def list_time():
+    print(datetime.today())
 
 @shared_task
 def task_with_delay():
