@@ -392,6 +392,7 @@ def syncOktaGroups():
             "provision_type": "Electronic",
             "security": True,
             "distribution": False,
+            "members": [],
             "oktaGroupMembers": [],
             "oktaGroupId": g["id"],
             "oktaOrg": oktaOrgId
@@ -446,14 +447,15 @@ def syncOktaGroups():
                     groupDict["orgId"] = [str(db.groups.find_one({"name": s["owner"]})["_id"])]
             db.group_provisions.update_one({"oktaGroupId": g["id"]}, {"$set": groupDict}, upsert=True)
 
-
     # process gridsec okta
-    gridsec_okta = OKTA(os.environ.get("GRIDSEC_OKTA_URL"), os.environ.get("GRIDSEC_OKTA_API_KEY"))
+    gridsec_env = db.accessList.find_one({"name": "GridSec Okta"})
+    gridsec_okta = OKTA(gridsec_env["url"], gridsec_env["key"])
     groups = gridsec_okta.get_groups().json()
     for g in groups:
         process_group(g, gridsec_okta, "gridsec")
     # process c4 okta
-    c4_okta = OKTA(os.environ.get("C4_OKTA_URL"), os.environ.get("C4_OKTA_API_KEY"))
+    c4_env = db.accessList.find_one({"name": "C4 Okta"})
+    c4_okta = OKTA(c4_env["url"], c4_env["key"])
     groups = c4_okta.get_groups().json()
     for g in groups:
         process_group(g, c4_okta, "c4")
