@@ -26,6 +26,7 @@ from .ninja_one import NinjaOne
 from .auvik import Auvik
 from .okta import OKTA
 import shutil
+from .splunk_to_repsol import splunk_to_repsol
 
 
 @shared_task(name="list_time")
@@ -315,6 +316,10 @@ def clear_temp_s3():
     s3 = S3_DB()
     for item in s3.list_bucket_items(os.environ.get("TICKET_BUCKET"), "temp"):
         s3.deleteFile(item.bucket_name, item.key)
+
+@shared_task(name="repsol_splunk")
+def send_repsol_splunk():
+    splunk_to_repsol()
 
 @shared_task(name="send_emails")
 def send_emails():

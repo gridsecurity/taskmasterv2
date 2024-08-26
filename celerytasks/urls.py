@@ -16,6 +16,7 @@ urlpatterns = [
     re_path(r'^celery/pagerduty/$', views.alert_pagerduty, name='pagerduty'),
     re_path(r'^celery/run_daily_ticket_report/$', views.run_daily_ticket_report, name='run_daily_ticket_report'),
     re_path(r'^celery/assets_splunk_cloud/$', views.send_assets_to_splunk, name="splunk_cloud_assets"),
+    re_path(r'^celery/repsol_splunk', views.repsol_splunk, name="repsol_splunk"),
     # re_path(r'^celery/provisions/$', views.provisions, name="provisions"),
     re_path(r'^celery/cisa_report', views.cisa_report, name="cisa_report"),
     re_path(r'^celery/clear_temp_folder_s3', views.clear_temp_folder_s3, name="clear_temp_folder_s3"),

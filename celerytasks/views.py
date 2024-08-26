@@ -37,6 +37,9 @@ def send_assets_to_splunk(request):
     splunk_cloud_assets()
     return HttpResponse("Splunk Cloud")
 
+def repsol_splunk(request):
+    send_repsol_splunk()
+
 # def provisions(request):
 #     access_ticket_provisions()
 #     return HttpResponse()
