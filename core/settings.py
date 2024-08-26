@@ -189,13 +189,21 @@ if environment == "prodcluster":
         "clear_temp_s3": {
             "task": "clear_temp_s3",
             "schedule": crontab(hour=11, minute=1)
+        },
+        "pull_patches": {
+            "task": "pull_patches",
+            "schedule": crontab(hour=1, minute=0)
+        },
+        "sync_okta_groups": {
+            "task": "sync_okta_groups",
+            "schedule": crontab(hour=1, minute=0)
         }
     }
 else:
     CELERY_BEAT_SCHEDULE = {
-        "list_time": {
-            "task": "list_time",
-            "schedule": crontab(minute="*/1")
+        "pull_patches": {
+            "task": "pull_patches",
+            "schedule": crontab(hour=1, minute=0)
         },
         "ninja_one_dump":{
             "task": "ninja_one_dump",
@@ -216,5 +224,9 @@ else:
         "sync_db": {
             "task": "sync_db",
             "schedule": crontab(hour=10, minute=35)
+        },
+        "sync_okta_groups": {
+            "task": "sync_okta_groups",
+            "schedule": crontab(hour=1, minute=0)
         }
     }

@@ -448,10 +448,10 @@ def syncOktaGroups():
 
 
     # process gridsec okta
-    # gridsec_okta = OKTA(os.environ.get("GRIDSEC_OKTA_URL"), os.environ.get("GRIDSEC_OKTA_API_KEY"))
-    # groups = gridsec_okta.get_groups().json()
-    # for g in groups:
-    #     process_group(g, gridsec_okta, "gridsec")
+    gridsec_okta = OKTA(os.environ.get("GRIDSEC_OKTA_URL"), os.environ.get("GRIDSEC_OKTA_API_KEY"))
+    groups = gridsec_okta.get_groups().json()
+    for g in groups:
+        process_group(g, gridsec_okta, "gridsec")
     # process c4 okta
     c4_okta = OKTA(os.environ.get("C4_OKTA_URL"), os.environ.get("C4_OKTA_API_KEY"))
     groups = c4_okta.get_groups().json()
