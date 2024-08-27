@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from .conn import *
 import re
+import shutil
 
 def sync_asset_patches():
     # download directory
@@ -18,6 +19,11 @@ def sync_asset_patches():
     site_folders = os.listdir('patch_repo')
     for s in site_folders:
         # list each site and get files
+        # get site ID for assets
+        site = db.sites.find_one({"site": s})
+        patchable_assets = list(db.assets.find({"siteId": str(site["_id"]), "system.biosSerialNumber": {"$ne": ""}}))
+        print(len(patchable_assets))
+        patched_assets = []
         for f in os.listdir('patch_repo/' + s):
             # set up key and name
             if "installed" in f:
@@ -58,6 +64,7 @@ def sync_asset_patches():
                             
 
                             patches.append(patch)
+                    text_file.close()
                 else:
                     # windows
                     tree = ET.parse(path)
@@ -84,3 +91,13 @@ def sync_asset_patches():
                                         patch_dict[prop["@Name"]] = prop["#text"] if "#text" in prop.keys() else ""
                                 patches.append(patch_dict)
                 db.assets.update_one({"_id": asset["_id"]}, {"$set": {key: patches}})
+                patched_assets.append(asset)
+        # compare list
+        patchable_ids = list(map(lambda x: x["_id"], patchable_assets))
+        patched_ids = list(map(lambda x: x["_id"], patched_assets))
+        missing_asset_ids = list(set(patchable_ids) - set(patched_ids))
+        missing_assets = list(filter(lambda x: x["_id"] in missing_asset_ids, patchable_assets))
+        asset_names = list(map(lambda x: x["assetName"], missing_assets))
+        print(asset_names)
+    # remove patch repo folder
+    shutil.rmtree('patch_repo')
