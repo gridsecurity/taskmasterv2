@@ -42,6 +42,29 @@ class EmailBox:
             reply.to.clear()
             reply.cc.clear()
             reply.body = body
+            reply.to.add(list(map(lambda x: x.replace(" ", ""), targets)))
+            if cc != None:
+                for c in cc:
+                    print('adding', c)
+                    reply.cc.add(c.replace(" ", ""))
+            if bcc != None:
+                for bc in bcc:
+                    print('adding', bc)
+                    reply.bcc.add(bc.replace(" ", ""))
+            # save the draft then send out
+            reply.save_draft()
+            # add attachment
+            if attachment:
+                s3 = S3_DB()
+                for at in attachment:
+                    try:
+                        if at['source'] == 's3':
+                            attach = s3.download_file(at["path"])
+                            print(attach)
+                            in_memory_attachment = (attach, at['filename'])
+                            reply.attachments.add([in_memory_attachment])
+                    except:
+                        pass
         else:
             print("create new message")
             m = self.account.new_message(resource=self.email)

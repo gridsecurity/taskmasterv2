@@ -97,7 +97,7 @@ class TicketProcessor:
                 if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
                     print('uploading {}'.format(file.name))
                     s3 = S3_DB()
-                    s3.upload_file(eml_content, eml_file_path)
+                    s3.upload_file(fileObj, "{}/{}".format(path, file.name))
                     
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
