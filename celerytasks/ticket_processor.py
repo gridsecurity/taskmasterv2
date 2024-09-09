@@ -80,6 +80,7 @@ class TicketProcessor:
     
     def upload_sftp(self, path):
         for file in self.m.attachments:
+            print(file)
             if file.attachment_type == "item":
                 custom_url = "https://graph.microsoft.com/beta/users/{}/messages/{}/attachments/{}/$value".format(self.user_id, self.m.object_id, file.attachment_id)
                 response = self.account.get(custom_url)
