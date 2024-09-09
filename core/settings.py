@@ -150,8 +150,8 @@ if environment == "prodcluster":
             "task":"pagerduty",
             "schedule": crontab(minute="*/2")
         },
-        "request_tickets_emails":{
-            "task": "request_tickets_emails",
+        "request_emails":{
+            "task": "request_emails",
             "schedule": crontab(minute="*/2")
         },
         "daily_ticket_report":{
