@@ -88,27 +88,19 @@ class TicketProcessor:
                     print("EML content retrieved, preparing to upload.")
                     eml_content = BytesIO(response.text.encode('utf-8'))
                     eml_file_path = '{}/{}'.format(path, file.name+".eml")
+                    print('uploading {}'.format(file.name))
+                    s3 = S3_DB()
+                    s3.upload_file(eml_content, eml_file_path)
+            else:
+                fileObj = BytesIO(base64.b64decode(file.content))
+                md5sum = md5(fileObj.getbuffer())
+                if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
                     try:
                         print('uploading {}'.format(file.name))
                         s3 = S3_DB()
                         s3.upload_file(eml_content, eml_file_path)
                     except Exception as e:
-                        pass
-                        print("Failed to upload .eml file:", str(e))
-            else:
-                try:
-                    fileObj = BytesIO(base64.b64decode(file.content))
-                    md5sum = md5(fileObj.getbuffer())
-                    if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
-                        try:
-                            print('uploading {}'.format(file.name))
-                            s3 = S3_DB()
-                            s3.upload_file(eml_content, eml_file_path)
-                        except Exception as e:
-                            print("Error uploading file:", str(e))
-                except Exception as e:
-                    pass
-                    print("Error handling file:", str(e))
+                        print("Error uploading file:", str(e))
     
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
