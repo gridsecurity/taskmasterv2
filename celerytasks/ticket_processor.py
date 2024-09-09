@@ -57,17 +57,14 @@ class TicketProcessor:
         print("creating new ticket")
         print(dict)
         res = db.tickets.insert_one(dict)
-        self.id = str(res._inserted_id)
+        self.id = str(res.inserted_id)
         if dict["severity"] == 1:
             pager = Pagerduty()
             pager.createIncident(dict['requester'], dict['number'], "Sev 1 incident")
         # upload attachments
         if self.m.has_attachments:
             self.upload_sftp(str(dict["number"]))
-            for item in self.m.attachments:
-                print('replacing {}'.format(item.content_id))
-                self.m.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(self.id), item))
-            db.tickets.update_one({"_id": res._inserted_id}, {"$set": {"body": self.m.body}})
+            db.tickets.update_one({"_id": res.inserted_id}, {"$set": {"body": self.m.body}})
         # send reply email
         print("sending reply email")
         template = render_to_string('emailadmin/support_ticket_email.html', dict)
@@ -81,7 +78,7 @@ class TicketProcessor:
     
     def upload_sftp(self, path):
         for file in self.m.attachments:
-            print(file)
+            print(file.attachment_type)
             if file.attachment_type == "item":
                 custom_url = "https://graph.microsoft.com/beta/users/{}/messages/{}/attachments/{}/$value".format(self.user_id, self.m.object_id, file.attachment_id)
                 response = self.account.get(custom_url)
@@ -98,8 +95,11 @@ class TicketProcessor:
                 if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
                     print('uploading {}'.format(file.name))
                     s3 = S3_DB()
-                    s3.upload_file(fileObj, "{}/{}".format(path, file.name))
-                    
+                    file_name = s3.upload_file(fileObj, "{}/{}".format(path, file.name))
+        for item in self.m.attachments:
+            print('replacing {}'.format(item.content_id))
+            self.m.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(self.id), item))
+
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
         # check for conversation id
@@ -173,6 +173,7 @@ class TicketProcessor:
             tick = self.create_ticket(dict)
 
     def process_existing_ticket(self, ticket):
+        self.id = str(ticket["_id"])
         # check if ticket is closed and older than 3 days will generate a new ticket
         if ticket['status'] in ['disabled', 'resolved', 'closed', 'completed_change']:
             if "closed_date" not in ticket.keys():

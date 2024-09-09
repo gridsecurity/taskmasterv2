@@ -1,6 +1,7 @@
 import boto3
 import io
 import os
+import re
 
 
 
@@ -12,6 +13,7 @@ class S3_DB:
         self.s3_client = boto3.resource('s3', aws_access_key_id=self.key, aws_secret_access_key=self.secret)
         self.client = boto3.client('s3', aws_access_key_id=self.key, aws_secret_access_key=self.secret)
         self.bucket = self.s3_client.Bucket(self.ticket_bucket)
+        
     def list_items(self, folderpath):
         files = []
         for f in self.bucket.objects.filter(Prefix=folderpath):
@@ -27,6 +29,18 @@ class S3_DB:
         return fileObj
 
     def upload_file(self, item, path):
+        split_path = path.split("/")
+        print(split_path)
+        counts = []
+        folder_items = self.list_items(split_path[0])
+        file_split = os.path.splitext(split_path[1])
+        pattern = '\(\d+\)'
+        for i in folder_items:
+            if i["filename"] in split_path[1]:
+                counts.append(re.search(pattern, i["filename"]))
+        print(counts)
+        
+            
         self.bucket.upload_fileobj(item, path)
 
     def ignore_file(self, copy_source, bucket, file):
