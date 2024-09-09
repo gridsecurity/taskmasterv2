@@ -32,8 +32,8 @@ class EmailBox:
         # get conversation id if exists
         if conversation_id:
             print("adding to existing conversation")
-            query = self.mailbox(self.email).new_query().on_attribute('conversation_id').equals(conversation_id)
-            messages = self.mailbox(self.email).get_messages(query=query)
+            query = self.account.mailbox(self.email).new_query().on_attribute('conversation_id').equals(conversation_id)
+            messages = self.account.mailbox(self.email).get_messages(query=query)
             for m in messages:
                 lastMessage = m
             print(lastMessage.object_id)

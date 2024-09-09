@@ -385,7 +385,6 @@ def send_emails():
             templateEnv = Environment(loader=template_loader)
             template = templateEnv.get_template(email["template"])
             html = template.render(email["dict"])
-            print(html)
             # try and get options
             try:
                 cc=email["cc"]
