@@ -57,7 +57,7 @@ class TicketProcessor:
         print("creating new ticket")
         print(dict)
         res = db.tickets.insert_one(dict)
-        self.id = res.inserted_id
+        self.id = str(res.__inserted_id)
         if dict["severity"] == 1:
             pager = Pagerduty()
             pager.createIncident(dict['requester'], dict['number'], "Sev 1 incident")
@@ -65,8 +65,8 @@ class TicketProcessor:
         if self.m.has_attachments:
             self.upload_sftp(str(dict["number"]))
             for item in self.m.attachments:
-                self.m.body.replace("cid:{}".format(item.content_id), '/api/images?folder=upload/{}&file={}'.format(str(dict["number"]), item))
-            db.tickets.update_one({"_id": res.inserted_id}, {"$set": {"body": self.m.body}})
+                self.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(self.id), item))
+            db.tickets.update_one({"_id": res._inserted_id}, {"$set": {"body": self.m.body}})
         # send reply email
         print("sending reply email")
         template = render_to_string('emailadmin/support_ticket_email.html', dict)
@@ -204,7 +204,7 @@ class TicketProcessor:
             try:
                 self.upload_sftp(str(ticket["number"]))
                 for item in self.m.attachments:
-                    self.body.replace("cid:{}".format(item.content_id), '/api/images?folder=upload/{}&file={}'.format(str(ticket["number"]), item))
+                    self.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(self.ticket["_id"]), item))
             except:
                 pass
         # add note
