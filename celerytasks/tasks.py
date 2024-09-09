@@ -45,7 +45,7 @@ def list_time():
     #     }
     # })
 
-@shared_task(name="process_tickets_emails")
+@shared_task(name="process_ticket_emails")
 def process_ticket_emails():
     print("process ticket email")
     # process unsent messages
