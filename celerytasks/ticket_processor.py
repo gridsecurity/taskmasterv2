@@ -95,13 +95,10 @@ class TicketProcessor:
                 fileObj = BytesIO(base64.b64decode(file.content))
                 md5sum = md5(fileObj.getbuffer())
                 if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
-                    try:
-                        print('uploading {}'.format(file.name))
-                        s3 = S3_DB()
-                        s3.upload_file(eml_content, eml_file_path)
-                    except Exception as e:
-                        print("Error uploading file:", str(e))
-    
+                    print('uploading {}'.format(file.name))
+                    s3 = S3_DB()
+                    s3.upload_file(eml_content, eml_file_path)
+                    
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
         # check for conversation id
