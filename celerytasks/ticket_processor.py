@@ -23,8 +23,11 @@ class TicketProcessor:
         cc = []
         for t in self.m.to:
             to.append(t.address)
-        for c in self.m.cc:
-            cc.append(c.address)
+        try:
+            for c in self.m.cc:
+                cc.append(c.address)
+        except:
+            pass
         print('creating dict')
         dict = {
             "number": count,
@@ -50,8 +53,8 @@ class TicketProcessor:
     
     def create_ticket(self, dict):
         print("creating new ticket")
+        print(dict)
         res = db.tickets.insert_one(dict)
-        dict["id"] = str(res.inserted_id)
         self.id = res.inserted_id
         if dict["severity"] == 1:
             pager = Pagerduty()
@@ -100,41 +103,41 @@ class TicketProcessor:
         objectid = re.search(pattern, self.m.body)
         if objectid != None:
             print('object id exists')
-            print(objectid.groups())
             ticket = db.tickets.find_one({"_id":ObjectId(objectid.group(1))})
             if ticket != None:
                 print('return ticket')
                 return ticket
         # search through all for subject
         rePattern = re.compile(r"^RE: ", re.IGNORECASE)
-        reResult = rePattern.search(self.m.subject)
-        subject = self.m.subject.replace("RE: ", "")
-        subject = subject.replace("Re: ", "")
-        subject = subject.replace("FW: ", "")
-        if reResult != None:
-            print('matched RE: Subject')
-            # try and search db for ticket
-            tickDict = {
+        if self.m.subject:
+            reResult = rePattern.search(self.m.subject)
+            subject = self.m.subject.replace("RE: ", "")
+            subject = subject.replace("Re: ", "")
+            subject = subject.replace("FW: ", "")
+            if reResult != None:
+                print('matched RE: Subject')
+                # try and search db for ticket
+                tickDict = {
+                    "$or":[
+                        {"submitdate": {"$gte": seven_days_ago}},
+                        {"updated": {"$gte": seven_days_ago}}
+                    ],
+                    "subject": subject,
+                    "status":{"$nin": ["closed", "deleted", "merged"]}
+                }
+                tickets = db.tickets.find(tickDict).sort("number",pymongo.DESCENDING)
+                if db.tickets.count_documents(tickDict) != 0:
+                    return tickets[0]
+            # if all else fails try and find matching subject
+            subjectDict = {
                 "$or":[
                     {"submitdate": {"$gte": seven_days_ago}},
                     {"updated": {"$gte": seven_days_ago}}
                 ],
-                "subject": subject,
-                "status":{"$nin": ["closed", "deleted", "merged"]}
-            }
-            tickets = db.tickets.find(tickDict).sort("number",pymongo.DESCENDING)
-            if db.tickets.count_documents(tickDict) != 0:
+                "subject": subject}
+            tickets = db.tickets.find(subjectDict).sort("number", pymongo.DESCENDING)
+            if db.tickets.count_documents(subjectDict) != 0:
                 return tickets[0]
-        # if all else fails try and find matching subject
-        subjectDict = {
-            "$or":[
-                {"submitdate": {"$gte": seven_days_ago}},
-                {"updated": {"$gte": seven_days_ago}}
-            ],
-            "subject": subject}
-        tickets = db.tickets.find(subjectDict).sort("number", pymongo.DESCENDING)
-        if db.tickets.count_documents(subjectDict) != 0:
-            return tickets[0]
         return None
     
     def process_ticket(self):
@@ -152,7 +155,6 @@ class TicketProcessor:
             return
         # set dictionary
         dict = self.setDict("incident")
-        print(dict)
         # check for existing ticket
         print('checking message')
         ticket = self.message_check()
@@ -167,17 +169,19 @@ class TicketProcessor:
         if ticket['status'] in ['disabled', 'resolved', 'closed', 'completed_change']:
             if "closed_date" not in ticket.keys():
                 # create new ticket
-                tick = self.create_ticket(ticket)
+                dict = self.setDict("incident")
+                tick = self.create_ticket(dict)
                 # link both tickets
                 db.tickets.update_one({"number": tick["number"]}, {"$push": {"reference": str(ticket["_id"])}})
-                db.tickets.update_one({"_id": ticket["_id"]}, {"$push": {"reference": str(tick["id"])}})
+                db.tickets.update_one({"_id": ticket["_id"]}, {"$push": {"reference": str(tick["_id"])}})
             else:
                 # if date is greater than 3 days
                 if datetime.fromtimestamp(ticket["closed_date"]) < datetime.today() - timedelta(days=3):
-                    tick = self.create_ticket(ticket)
+                    dict = self.setDict("incident")
+                    tick = self.create_ticket(dict)
                     # link both tickets
                     db.tickets.update_one({"number": tick["number"]}, {"$push": {"reference": str(ticket["_id"])}})
-                    db.tickets.update_one({"_id": ticket["_id"]}, {"$push": {"reference": str(tick["id"])}})
+                    db.tickets.update_one({"_id": ticket["_id"]}, {"$push": {"reference": str(tick["_id"])}})
                 else:
                     # re-open ticket
                     self.add_to_existing_ticket(self, ticket)
@@ -197,12 +201,23 @@ class TicketProcessor:
             except:
                 pass
         # add note
+        to = []
+        cc = []
+        for t in self.m.to:
+            to.append(t.address)
+        try:
+            for c in self.m.cc:
+                cc.append(c.address)
+        except:
+            pass
+        print(self.m.to)
+        print(self.m.cc)
         db.ticketNotes.insert_one({
             "username": self.m.sender.address,
             "ticketId": str(ticket["_id"]),
             "notes": self.m.body,
-            "to": ticket["to"],
-            "cc": ticket["cc"],
+            "to": to,
+            "cc": cc,
             "datetime": datetime.timestamp(datetime.today()),
             "noteType": "external"
         })
@@ -224,7 +239,7 @@ class TicketProcessor:
             notify(
                 [ticket["assign"]], 
                 "#{}".format(ticket["number"]), 
-                "A new message from {}".format(m.sender.address),
+                "A new message from {}".format(self.m.sender.address),
                 ticket=ticket["number"]
             )
 
