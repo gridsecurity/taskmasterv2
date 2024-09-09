@@ -146,6 +146,10 @@ if environment == "prodcluster":
             "task": "process_ticket_emails",
             "schedule": crontab(minute="*/2")
         },
+        "send_emails": {
+            "task": "send_emails",
+            "schedule": crontab(minute="*/2")
+        },
         "pagerduty":{
             "task":"pagerduty",
             "schedule": crontab(minute="*/2")
