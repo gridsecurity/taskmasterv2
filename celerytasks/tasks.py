@@ -66,8 +66,10 @@ def process_ticket_emails():
     # get messages
     inbox = EmailBox('tickets@gridsec.com', "Inbox")
     messages = inbox.mailbox.get_messages(query="isRead eq false", download_attachments=True)
+    user = inbox.account.directory().get_user('tickets@gridsec.com')
+    user_id = user.object_id
     for m in messages:
-        ticket = TicketProcessor(m)
+        ticket = TicketProcessor(m, user_id, inbox.account)
         ticket.process_ticket()
         m.mark_as_read()
     

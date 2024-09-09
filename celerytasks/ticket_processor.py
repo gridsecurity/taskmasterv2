@@ -14,8 +14,10 @@ from .s3 import S3_DB
 from .notifications import notify
 
 class TicketProcessor:
-    def __init__(self, message):
+    def __init__(self, message, user_id, account):
         self.m = message
+        self.user_id = user_id
+        self.account = account
 
     def setDict(self, type):
         count = db.tickets.find({}).sort("number", pymongo.DESCENDING)[0]['number'] + 1 # add 1 count to ticket
@@ -61,7 +63,7 @@ class TicketProcessor:
             pager.createIncident(dict['requester'], dict['number'], "Sev 1 incident")
         # upload attachments
         if self.m.has_attachments:
-            self.upload_sftp(self.m.attachments, str(dict["number"]))
+            self.upload_sftp(str(dict["number"]))
             for item in self.m.attachments:
                 self.m.body.replace("cid:{}".format(item.content_id), '/api/images?folder=upload/{}&file={}'.format(str(dict["number"]), item))
             db.tickets.update_one({"_id": res.inserted_id}, {"$set": {"body": self.m.body}})
@@ -76,22 +78,36 @@ class TicketProcessor:
             pass
         return dict
     
-    def upload_sftp(files, path):
-        for file in files:
-            print('uploading {}'.format(file.name))
-            # try to get file if fails continue to next file 
-            try:
-                fileObj = BytesIO(base64.b64decode(file.content))
-            except:
-                continue
-            # check md5 hash for file
-            md5sum = md5(fileObj.getbuffer())
-            if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
+    def upload_sftp(self, path):
+        for file in self.m.attachments:
+            if file.attachment_type == "item":
+                custom_url = "https://graph.microsoft.com/beta/users/{}/messages/{}/attachments/{}/$value".format(self.user_id, self.m.object_id, file.attachment_id)
+                response = self.account.get(custom_url)
+                if response.status_code == 200:
+                    print("EML content retrieved, preparing to upload.")
+                    eml_content = BytesIO(response.text.encode('utf-8'))
+                    eml_file_path = '{}/{}'.format(path, file.name+".eml")
+                    try:
+                        print('uploading {}'.format(file.name))
+                        s3 = S3_DB()
+                        s3.upload_file(eml_content, eml_file_path)
+                    except Exception as e:
+                        pass
+                        print("Failed to upload .eml file:", str(e))
+            else:
                 try:
-                    s3 = S3_DB()
-                    s3.upload_file(fileObj, '{}/{}'.format(path, file.name))
-                except:
+                    fileObj = BytesIO(base64.b64decode(file.content))
+                    md5sum = md5(fileObj.getbuffer())
+                    if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
+                        try:
+                            print('uploading {}'.format(file.name))
+                            s3 = S3_DB()
+                            s3.upload_file(eml_content, eml_file_path)
+                        except Exception as e:
+                            print("Error uploading file:", str(e))
+                except Exception as e:
                     pass
+                    print("Error handling file:", str(e))
     
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
@@ -196,7 +212,7 @@ class TicketProcessor:
     def add_to_existing_ticket(self, ticket):
         if self.m.has_attachments:
             try:
-                self.upload_sftp(self.m.attachments, str(ticket["number"]))
+                self.upload_sftp(str(ticket["number"]))
                 for item in self.m.attachments:
                     self.body.replace("cid:{}".format(item.content_id), '/api/images?folder=upload/{}&file={}'.format(str(ticket["number"]), item))
             except:
