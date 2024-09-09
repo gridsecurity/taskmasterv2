@@ -72,7 +72,10 @@ class EmailBox:
             m.body = body
             # add to users
             m.to.add(list(set(targets)))
-            m.cc.add(list(set(targets)))
+            if cc:
+                m.cc.add(list(set(cc)))
+            if bcc:
+                m.bcc.add(list(set(bcc)))
             reply = m
         
         # add attachment
