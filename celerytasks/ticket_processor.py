@@ -61,6 +61,7 @@ class TicketProcessor:
             pager.createIncident(dict['requester'], dict['number'], "Sev 1 incident")
         # upload attachments
         if self.m.has_attachments:
+            self.upload_sftp(self.m.attachments, str(dict["number"]))
             for item in self.m.attachments:
                 self.m.body.replace("cid:{}".format(item.content_id), '/api/images?folder=upload/{}&file={}'.format(str(dict["number"]), item))
             db.tickets.update_one({"_id": res.inserted_id}, {"$set": {"body": self.m.body}})
