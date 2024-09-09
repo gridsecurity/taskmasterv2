@@ -45,7 +45,7 @@ def repsol_splunk(request):
 #     return HttpResponse()
 
 def cisa_report(request):
-    process_csa_report()
+    process_cisa_report()
     return HttpResponse()
 
 def clear_temp_folder_s3(request):

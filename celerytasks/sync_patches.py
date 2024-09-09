@@ -26,10 +26,10 @@ def sync_asset_patches():
         patched_assets = []
         for f in os.listdir('patch_repo/' + s):
             # set up key and name
-            if "installed" in f:
+            if "_installed" in f:
                 name = f.split("_installed")
                 key = "installedPatches"
-            elif "pending" in f:
+            elif "_pending" in f:
                 name = f.split("_pending")
                 key = "pendingPatches"
             else:
@@ -92,6 +92,8 @@ def sync_asset_patches():
                                 patches.append(patch_dict)
                 db.assets.update_one({"_id": asset["_id"]}, {"$set": {key: patches}})
                 patched_assets.append(asset)
+                # remove from server
+                
         # compare list
         patchable_ids = list(map(lambda x: x["_id"], patchable_assets))
         patched_ids = list(map(lambda x: x["_id"], patched_assets))

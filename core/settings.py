@@ -194,10 +194,10 @@ if environment == "prodcluster":
             "task": "pull_patches",
             "schedule": crontab(hour=1, minute=0)
         },
-        "sync_okta_groups": {
-            "task": "sync_okta_groups",
-            "schedule": crontab(hour=1, minute=0)
-        }
+        # "sync_okta_groups": {
+        #     "task": "sync_okta_groups",
+        #     "schedule": crontab(hour=1, minute=0)
+        # }
     }
 else:
     CELERY_BEAT_SCHEDULE = {

@@ -3,7 +3,7 @@ from jinja2 import Environment, FileSystemLoader
 from time import strftime, localtime
 from celery import shared_task
 from bson.objectid import ObjectId
-import json
+import requests
 import os
 
 from .conn import *
@@ -28,6 +28,7 @@ from .auvik import Auvik
 import shutil
 from .splunk_to_repsol import splunk_to_repsol
 from .okta_group_sync import okta_group_sync
+import json
 
 
 @shared_task(name="list_time")
@@ -43,11 +44,6 @@ def list_time():
     #         "title": "This is a test email for celery task"
     #     }
     # })
-
-@shared_task(name="splunk_cloud_assets")
-def splunk_cloud_assets():
-    splunk_cloud_assets_push()
-
 
 @shared_task(name="process_tickets_emails")
 def process_ticket_emails():
@@ -273,26 +269,69 @@ def daily_tickets_report():
 @shared_task(name="pull_patches")
 def sync_patches():
     sync_asset_patches()
-    
 
 @shared_task(name="splunk_cloud_assets")
 def splunk_cloud_assets():
-    assets = list(db.assets.find({}))
-    event_list = []
-    for a in assets:
-        a.pop("_id")
-        print(a["assetName"])
-        if a["siteId"]:
-            site = db.sites.find_one({"_id": ObjectId(a["siteId"])})
-            a["ip"] = a["ipAddresses"]
-            a["site_name"] = site["site"]
-            if "latitude" in site.keys():
-                a["lat"] = site["latitude"]
-                a["long"] = site["longitude"]
-        event_list.append({"event": a, "index": "asset_inventory_customers", "sourcetype": "_json"})
-    json_objects = json.dumps(assets, indent=4)
-    with open('asset.json', "w") as outfile:
-        outfile.write(json_objects)
+    print("getting assets")
+    
+    sites = list(db.sites.find())
+    
+    def popId(l):
+        list = []
+        for i in l:
+            i.pop("_id")
+            list.append(i)
+        return list
+    
+    def splunk_api_request(data):
+        print("sending data")
+        url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
+        headers = {
+            "Authorization": "Splunk 1cca1e88-3629-4bea-82bf-9947b215059c",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        res = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
+        print(res.status_code)
+        print(res.text)
+        
+    for a in popId(db.auvik.find()):
+        site = next(filter(lambda x: x['auvikTenant'] == a['relationships']['tenant']['data']['id'], sites), None)
+        site_name = site["site"] if site else ""
+        a["site_name"] = site_name
+        data = {"event": a}
+        print("sending auvik")
+        splunk_api_request(data)
+        
+    for n in popId(db.ninja.find()):
+        site = next(filter(lambda x: x['ninjaLocation'] == str( n['locationId'] ), sites), None)
+        site_name = site["site_name"] if site else ""
+        n["site_name"] = site_name
+        data = {"event": n}
+        print("sending ninja one")
+        splunk_api_request(data)
+        
+    # for i in popId(db.id_assets.find().limit(20)):
+    #     data = {"event": i}
+    #     print("sending industrial")
+    #     splunk_api_request(data)
+    # for a in assets:
+    #     a.pop("_id")
+    #     # print(a["assetName"])
+    #     if a["siteId"]:
+    #         site = db.sites.find_one({"_id": ObjectId(a["siteId"])})
+    #         a["ip"] = a["ipAddresses"]
+    #         a["site_name"] = site["site"]
+    #         if "latitude" in site.keys():
+    #             a["lat"] = site["latitude"]
+    #             a["long"] = site["longitude"]
+    #     token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWwiLCJpZHAiOiJTcGx1bmsiLCJqdGkiOiIzYjJiNjJkZTc4YjBhYzljNjY5YmE1MGY2MTE1OTdlYTBmMjIwZDFjYzRmMzRiYTIzNzEyMTczNmJhZDU0YjZmIiwiaWF0IjoxNzI0ODcxMDUxLCJleHAiOjE3NTY0MDcwNTEsIm5iciI6MTcyNDg3MTA1MX0.dXSKuqus7qu-tCdq9iw_0low3wgnlNaBZ_ALqxBFvo--puCbjD3QyfhVO2ExH4YGTkrocoFPyAMBlfhTIih3Ag"
+    #     url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
+    #     headers = {
+    #         "Authorization": "Splunk 1cca1e88-3629-4bea-82bf-9947b215059c",
+    #         "Content-Type": "application/x-www-form-urlencoded"
+    #     }
+    #     data = {"event": a}
+
 
 
 # @shared_task(name="access_ticket_provisions")
@@ -303,7 +342,7 @@ def splunk_cloud_assets():
     
 
 @shared_task(name="cisa_report")
-def process_csa_report():
+def process_cisa_report():
     mailbox = EmailBox("reports@gridsec.com", "Inbox")
 
     mailbox = CISABox('reports@gridsec.com', "Inbox")
