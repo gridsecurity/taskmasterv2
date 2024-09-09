@@ -178,10 +178,10 @@ if environment == "prodcluster":
             "task": "asset_dump",
             "schedule": crontab(hour=2, minute=0)
         },
-        "access_ticket_provisions": {
-            "task": "access_ticket_provisions",
-            "schedule": crontab(minute="*/1")
-        },
+        # "access_ticket_provisions": {
+        #     "task": "access_ticket_provisions",
+        #     "schedule": crontab(minute="*/1")
+        # },
         "cisa_repot": {
             "task": "cisa_report",
             "schedule": crontab(hour=8, minute=1)
