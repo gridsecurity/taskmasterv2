@@ -81,7 +81,7 @@ class TicketProcessor:
             print(file.attachment_type)
             if file.attachment_type == "item":
                 custom_url = "https://graph.microsoft.com/beta/users/{}/messages/{}/attachments/{}/$value".format(self.user_id, self.m.object_id, file.attachment_id)
-                response = self.account.get(custom_url)
+                response = self.account.connection.get(custom_url)
                 if response.status_code == 200:
                     print("EML content retrieved, preparing to upload.")
                     eml_content = BytesIO(response.text.encode('utf-8'))
@@ -193,7 +193,7 @@ class TicketProcessor:
                     db.tickets.update_one({"_id": ticket["_id"]}, {"$push": {"reference": str(tick["_id"])}})
                 else:
                     # re-open ticket
-                    self.add_to_existing_ticket(self, ticket)
+                    self.add_to_existing_ticket(ticket)
                     # create new incident for pagerduty
                     print('creating new incident')
                     pager = Pagerduty()
