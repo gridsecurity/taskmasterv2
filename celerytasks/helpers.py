@@ -44,7 +44,6 @@ def rename_images_to_be_unique(file_name, path):
     for item in items:
         existing_files.append(os.path.basename(item.key))
     
-    # Start with the original filename
     new_filename = original_filename
     counter = 0
     
