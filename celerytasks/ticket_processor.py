@@ -12,6 +12,8 @@ from .splunk_logs import create_splunk_log
 from .pagerduty import Pagerduty
 from .s3 import S3_DB
 from .notifications import notify
+import os
+from bs4 import BeautifulSoup
 
 class TicketProcessor:
     def __init__(self, message, user_id, account):
@@ -64,7 +66,6 @@ class TicketProcessor:
         # upload attachments
         if self.m.has_attachments:
             self.upload_sftp(str(dict["number"]))
-            db.tickets.update_one({"_id": res.inserted_id}, {"$set": {"body": self.m.body}})
         # send reply email
         print("sending reply email")
         template = render_to_string('emailadmin/support_ticket_email.html', dict)
@@ -77,6 +78,7 @@ class TicketProcessor:
         return dict
     
     def upload_sftp(self, path):
+        soup = BeautifulSoup(self.m.body, 'html.parser')
         for file in self.m.attachments:
             print(file.attachment_type)
             if file.attachment_type == "item":
@@ -96,9 +98,18 @@ class TicketProcessor:
                     print('uploading {}'.format(file.name))
                     s3 = S3_DB()
                     file_name = s3.upload_file(fileObj, "{}/{}".format(path, file.name))
-        for item in self.m.attachments:
-            print('replacing {}'.format(item.content_id))
-            self.m.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(self.id), item))
+                    # go through the images in the body and replace the cid with portal url
+                    for img_tag in soup.find_all('img', src=True):
+                        if img_tag['src'].startswith('cid:'):
+                            content_id = img_tag['src'][4:] 
+                            # Extract the cid and compare with file content_id
+                            if content_id == file.content_id:
+                                img_tag['src'] = f'/api/tickets/images?id={self.id}&file_name={"{}".format( file_name)}'
+        if soup.body:
+            soup = str(soup.body.decode_contents())  
+        else:
+            soup = str(soup) 
+        db.tickets.update_one({"_id": ObjectId(self.id)}, {"$set": {"body":soup}})
 
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
