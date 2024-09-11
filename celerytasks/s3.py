@@ -1,6 +1,5 @@
 import boto3
 import io
-import re
 import os
 
 
@@ -57,3 +56,23 @@ class S3_DB:
     def list_bucket_objects(self, bucket_name):
         return self.client.list_objects(Bucket = bucket_name)["Contents"]
 
+    def rename_images_to_be_unique(self, file_name, path):
+        original_filename = file_name
+        base_name, file_extension = os.path.splitext(original_filename)
+        items = self.list_bucket_items(self.ticket_bucket, path)
+        
+        # Extract existing filenames in the bucket
+        existing_files = []
+        for item in items:
+            existing_files.append(os.path.basename(item.key))
+        
+        # Start with the original filename
+        new_filename = original_filename
+        counter = 0
+        
+        # Check if the filename already exists
+        while new_filename in existing_files:
+            counter += 1
+            new_filename = f"{base_name}({counter}){file_extension}"
+        
+        return new_filename
