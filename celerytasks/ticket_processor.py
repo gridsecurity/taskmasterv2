@@ -80,7 +80,10 @@ class TicketProcessor:
     def upload_sftp(self, path):
         soup = BeautifulSoup(self.m.body, 'html.parser')
         for file in self.m.attachments:
+            file_name = file.name
+            file_extension = os.path.splitext(file.name)[1]
             print(file.attachment_type)
+            
             if file.attachment_type == "item":
                 custom_url = "https://graph.microsoft.com/beta/users/{}/messages/{}/attachments/{}/$value".format(self.user_id, self.m.object_id, file.attachment_id)
                 response = self.account.connection.get(custom_url)
@@ -95,21 +98,25 @@ class TicketProcessor:
                 fileObj = BytesIO(base64.b64decode(file.content))
                 md5sum = md5(fileObj.getbuffer())
                 if db.ignoreFileList.find_one({'hash': md5sum.hexdigest()}) == None:
-                    print('uploading {}'.format(file.name))
-                    s3 = S3_DB()
-                    file_name = s3.upload_file(fileObj, "{}/{}".format(path, file.name))
                     # go through the images in the body and replace the cid with portal url
                     for img_tag in soup.find_all('img', src=True):
                         if img_tag['src'].startswith('cid:'):
                             content_id = img_tag['src'][4:] 
                             # Extract the cid and compare with file content_id
                             if content_id == file.content_id:
-                                img_tag['src'] = f'/api/tickets/images?id={self.id}&file_name={"{}".format( file_name)}'
+                                file_name = f"{file.content_id}{file_extension}"
+                                img_tag['src'] = f'/api/tickets/images?id={self.id}&file_name={"{}/{}".format(path, file_name)}'
+                                img_tag['alt'] = file_name
+            print('uploading {}'.format(file.name))
+            s3 = S3_DB()
+            s3.upload_file(fileObj, "{}/{}".format(path, file_name))
         if soup.body:
             soup = str(soup.body.decode_contents())  
         else:
             soup = str(soup) 
+        print(f"soup: {soup}")
         db.tickets.update_one({"_id": ObjectId(self.id)}, {"$set": {"body":soup}})
+        return soup
 
     def message_check(self):
         seven_days_ago = datetime.today() - timedelta(days=7)
@@ -214,10 +221,7 @@ class TicketProcessor:
     
     def add_to_existing_ticket(self, ticket):
         if self.m.has_attachments:
-            self.upload_sftp(str(ticket["number"]))
-            for item in self.m.attachments:
-                print('replacing {}'.format(item.content_id))
-                self.m.body.replace("cid:{}".format(item.content_id), '/api/images?id={}&file={}'.format(str(ticket["_id"]), item))
+            updated_body = self.upload_sftp(str(ticket["number"]))
         # add note
         to = []
         cc = []
@@ -233,7 +237,7 @@ class TicketProcessor:
         db.ticketNotes.insert_one({
             "username": self.m.sender.address,
             "ticketId": str(ticket["_id"]),
-            "notes": self.m.body,
+            "notes": updated_body,
             "to": to,
             "cc": cc,
             "datetime": datetime.timestamp(datetime.today()),
