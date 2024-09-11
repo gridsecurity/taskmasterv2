@@ -64,10 +64,7 @@ class S3_DB:
     def rename_images_to_be_unique(self, file_name, path):
         original_filename = file_name
         base_name, file_extension = os.path.splitext(original_filename)
-        
-        # Get bucket items
-        s3 = S3_DB()
-        items = s3.list_bucket_items(s3.ticket_bucket, path)
+        items = self.list_bucket_items(self.ticket_bucket, path)
         
         # Extract existing filenames in the bucket
         existing_files = []
