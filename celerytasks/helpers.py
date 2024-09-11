@@ -27,3 +27,4 @@ def upload_to_sharepoint(excel_file, path):
     ctx = ClientContext(site_url).with_credentials(client_credentials)
     target_folder = ctx.web.get_folder_by_server_relative_url(path)
     target_folder.upload_file('{}.xlsx'.format(date.today()), excel_file).execute_query()
+
