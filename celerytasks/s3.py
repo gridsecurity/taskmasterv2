@@ -2,7 +2,6 @@ import boto3
 import io
 import re
 import os
-from helpers import rename_images_to_be_unique
 
 
 class S3_DB:
@@ -29,12 +28,7 @@ class S3_DB:
         return fileObj
 
     def upload_file(self, item, path):
-        directory, filename = os.path.split(path)
-        unique_filename = rename_images_to_be_unique(filename, directory)
-        print(f"unique_filename: {unique_filename}")
-        unique_path = "{}/{}".format(directory, unique_filename)
-        self.bucket.upload_fileobj(item, unique_path)
-        return unique_path 
+        self.bucket.upload_fileobj(item, path) 
 
     def ignore_file(self, copy_source, bucket, file):
         return self.client.copy(copy_source, bucket, file)
