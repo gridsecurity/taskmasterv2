@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from .conn import *
 import re
+import pymongo
 import shutil
 
 def sync_asset_patches():
@@ -21,8 +22,7 @@ def sync_asset_patches():
         # list each site and get files
         # get site ID for assets
         site = db.sites.find_one({"site": s})
-        patchable_assets = list(db.assets.find({"siteId": str(site["_id"]), "system.biosSerialNumber": {"$ne": ""}}))
-        print(len(patchable_assets))
+        patchable_assets = list(db.assets.find({"siteId": str(site["_id"]), "patchMgmt": True}))
         patched_assets = []
         for f in os.listdir('patch_repo/' + s):
             # set up key and name
@@ -61,8 +61,6 @@ def sync_asset_patches():
                                 except:
                                     currentVersion = ""
                                 patch["CurrentVersion"] = currentVersion
-                            
-
                             patches.append(patch)
                     text_file.close()
                 else:
@@ -98,8 +96,24 @@ def sync_asset_patches():
         patchable_ids = list(map(lambda x: x["_id"], patchable_assets))
         patched_ids = list(map(lambda x: x["_id"], patched_assets))
         missing_asset_ids = list(set(patchable_ids) - set(patched_ids))
-        missing_assets = list(filter(lambda x: x["_id"] in missing_asset_ids, patchable_assets))
-        asset_names = list(map(lambda x: x["assetName"], missing_assets))
-        print(asset_names)
+        if len(missing_asset_ids) > 0:
+            # submit new incident ticket
+            db.tickets.insert_one({
+                "firstName": "GridSec",
+                "lastName": "Portal",
+                "phone": "916-822-2078",
+                "severity": 4,
+                "incident_type": "",
+                "sites": [s],
+                "subject": "Assets that did not check in for patches",
+                "body": "<p>The attached assets did not create xml or txt in gs-repo01. Please check devices and make sure they are checking in to gs-repo01.</p>",
+                "assets": list(map(lambda x: str(x), missing_asset_ids)),
+                "type": "incident",
+                "status": "new",
+                "requester": "tickets@gridsec.com",
+                "to": ["tickets@gridsec.com"],
+                "number": db.tickets.find({}).sort("number", pymongo.DESCENDING).limit(1)[0]['number'] + 1,
+                "submitdate": datetime.timestamp(datetime.today())
+            })
     # remove patch repo folder
     shutil.rmtree('patch_repo')
