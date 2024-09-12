@@ -66,15 +66,16 @@ class TicketProcessor:
         # upload attachments
         if self.m.has_attachments:
             self.upload_sftp(str(dict["number"]))
-        # send reply email
-        print("sending reply email")
-        template = render_to_string('emailadmin/support_ticket_email.html', dict)
-        reply_msg = self.m.reply()
-        reply_msg.body = template
-        try:
-            reply_msg.send()
-        except:
-            pass
+        if dict["type"] != "alert":
+            # send reply email
+            print("sending reply email")
+            template = render_to_string('emailadmin/support_ticket_email.html', dict)
+            reply_msg = self.m.reply()
+            reply_msg.body = template
+            try:
+                reply_msg.send()
+            except:
+                pass
         return dict
     
     def upload_sftp(self, path):
