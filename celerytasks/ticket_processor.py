@@ -222,6 +222,8 @@ class TicketProcessor:
     def add_to_existing_ticket(self, ticket):
         if self.m.has_attachments:
             updated_body = self.upload_sftp(str(ticket["number"]))
+        else:
+            updated_body = self.m.body
         # add note
         to = []
         cc = []
