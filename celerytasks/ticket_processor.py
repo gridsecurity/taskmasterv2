@@ -107,9 +107,9 @@ class TicketProcessor:
                                 file_name = f"{file.content_id}{file_extension}"
                                 img_tag['src'] = f'/api/tickets/images?id={self.id}&file_name={"{}/{}".format(path, file_name)}'
                                 img_tag['alt'] = file_name
-            print('uploading {}'.format(file.name))
-            s3 = S3_DB()
-            s3.upload_file(fileObj, "{}/{}".format(path, file_name))
+                    print('uploading {}'.format(file.name))
+                    s3 = S3_DB()
+                    s3.upload_file(fileObj, "{}/{}".format(path, file_name))
         if soup.body:
             soup = str(soup.body.decode_contents())  
         else:
