@@ -164,6 +164,7 @@ def id_asset_dump():
             if prop["name"] == "Location":
                 if prop["value"] not in locations:
                     locations.append(prop["value"])
+    ids = []
     # update location list
     db.accessList.update_one({"name": "id_asset_locations"}, {"$set": {"locations": locations}})
     today_date = datetime.timestamp(datetime.today())
@@ -175,25 +176,35 @@ def id_asset_dump():
             asset["location"] = location
             asset["manual"] = False
             asset["lastUpdated"] = today_date
+            asset["exists"] = True
             db.id_assets.update_one({"assetUuid": asset["assetUuid"]}, {"$set": asset}, upsert=True)
-    teams = Teams("GS-DEV")
-    teams.send_message("Finished processing Industrial Defender Assets")
-
+            ids.append(asset["assetUuid"])
+    # find all assets with no matching ids
+    not_checked_in = db.id_assets.distinct("assetUuid", {"assetUuid": {"$nin": ids}})
+    print(not_checked_in)
+    db.id_assets.update_many({"assetUuid": {"$in": not_checked_in}}, {"$set": {"exists": False}})
+    
 @shared_task(name="ninja_one_dump")
 def ninja_one_dump():
     ninja = NinjaOne()
     print( "Pulling NinjaOne Objects")
     after = 0
     start = time.time()
+    ninjaIds = []
     while True:
         devices = ninja.list_devices_detailed(page_size=500, after=after)
         if len(devices) > 0:
             for d in devices:
+                d["exists"] = True
                 db.ninja.update_one({"id": d["id"]}, {"$set": d}, upsert=True)
+                ninjaIds.append(d["id"])
             after += 500
         else:
             break
-
+    # find all assets with no matched ids
+    not_checked_in = db.ninja.distinct("id", {"id": {"$nin": ninjaIds}})
+    print(not_checked_in)
+    db.ninja.update_many({"id": {"$in": not_checked_in}}, {"$set": {"exists": False}})
     finish = time.time()
     difference = (finish - start ) / 60
     print(difference)
@@ -204,24 +215,35 @@ def auvik_dump():
     start = time.time()
     # Nightly pull of Auvik Assets
     print( "Pulling Auvik Objects" )
+    auvikIds = []
     deviceTypes = ["unknown", "switch", "l3Switch", "router", "accessPoint", "firewall", "workstation", "server", "storage", "printer", "copier", "hypervisor", "multimedia", "phone", "tablet", "handheld", "virtualAppliance", "bridge", "controller", "hub", "modem", "ups", "module", "loadBalancer", "camera", "telecommunications", "packetProcessor", "chassis", "airConditioner", "virtualMachine", "pdu", "ipPhone", "backhaul", "internetOfThings", "voipSwitch", "stack", "backupDevice", "timeClock", "lightingDevice", "audioVisual", "securityAppliance", "utm", "alarm", "buildingManagement", "ipmi", "thinAccessPoint", "thinClient"]
     for t in deviceTypes:
         devices = auvik.get_devices(deviceType=t)
         if 'data' in devices.keys():
             for d in devices["data"]:
+                d["exists"] = True
                 db.auvik.update_one({"id": d["id"]}, {"$set": d}, upsert=True)
             while True:
                 if 'links' in devices.keys():
                     if "next" in devices["links"].keys():
                         url = devices["links"]["next"].split("&tenants=")[0]
                         devices = auvik.get_devices_url(url)
-                        for d in devices["data"]:
-                            db.auvik.update_one({"id": d["id"]}, {"$set": d}, upsert=True)
+                        if devices["data"]:
+                            for d in devices["data"]:
+                                d["exists"] = True
+                                db.auvik.update_one({"id": d["id"]}, {"$set": d}, upsert=True)
+                                auvikIds.append(d["id"])
+                        else:
+                            break
                     else:
                         break
                 else:
                     break
-
+    # update all not existing assets
+    not_checked_in = db.auvik.distinct("id", {"id": {"$nin": auvikIds}})
+    print(not_checked_in)
+    db.auvik.update_many({"id": {"$in": not_checked_in}}, {"$set": {"exists": False}})
+    
     finish = time.time()
     difference = (finish - start ) / 60
     print(difference)

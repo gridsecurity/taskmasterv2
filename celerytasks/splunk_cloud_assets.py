@@ -8,7 +8,6 @@ def splunk_cloud_assets_push():
     assets = list(db.assets.find({}))
     # get location for sites
     # sites = list(db.sites.find({}, {"site": 1, "longitude": 1, "latitude": 1, "_id": 1}))
-    # ninja_assets = list(db.ninja_one_assets.find({}))
     # ninja = NinjaOne()
     # ninja_roles = ninja.list_device_roles()
     roles = db.accessList.find_one({"name": "Ninja Device Roles"})["roles"]

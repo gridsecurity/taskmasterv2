@@ -17,12 +17,12 @@ def dump_assets():
     for r in roles: 
         db.device_roles.update_one({"id": r["id"]}, {"$set": r}, upsert=True)
     # get sites
-    sites = list(db.sites.find({"site": "arcc"}))
+    sites = list(db.sites.find({}))
 
     def pull_id():
         for s in sites:
             if s["id_locations"]:
-                for id_asset in list(db.id_assets.find({"location": s["id_locations"]})):
+                for id_asset in list(db.id_assets.find({"location": s["id_locations"], "exists": True})):
                     # try to find id asset by indDefId
                     asset = db.assets.find_one({"siteId": str(s["_id"]), "indDefId": str(id_asset["assetUuid"])})
                     interfaces = []
@@ -98,7 +98,7 @@ def dump_assets():
         start = time.time()
         def ninjaToAssetSync():
             print( "Syncing NinjaOne Assets")
-            for d in list(db.ninja.find()):
+            for d in list(db.ninja.find({"exists": True})):
                 site = next(filter(lambda x: x['ninjaLocation'] == str( d['locationId'] ), sites), None)
                 siteId = str(site['_id']) if site else ""
 
@@ -194,7 +194,7 @@ def dump_assets():
     def process_auvik():
         print( "Processing Auvik Objects" )
         start = time.time()
-        for d in list(db.auvik.find()):
+        for d in list(db.auvik.find({"exists": True})):
             print(d["id"])
             site = next(filter(lambda x: x['auvikTenant'] == d['relationships']['tenant']['data']['id'], sites), None)
             siteId = str(site['_id']) if site else ""
