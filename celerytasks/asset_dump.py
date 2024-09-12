@@ -17,7 +17,7 @@ def dump_assets():
     for r in roles: 
         db.device_roles.update_one({"id": r["id"]}, {"$set": r}, upsert=True)
     # get sites
-    sites = list(db.sites.find({}))
+    sites = list(db.sites.find({"site": "arcc"}))
 
     def pull_id():
         for s in sites:
@@ -25,61 +25,35 @@ def dump_assets():
                 for id_asset in list(db.id_assets.find({"location": s["id_locations"]})):
                     # try to find id asset by indDefId
                     asset = db.assets.find_one({"siteId": str(s["_id"]), "indDefId": str(id_asset["assetUuid"])})
-                    upsert = True
-                    if asset:
-                        upsert = False
                     interfaces = []
-                    if "interfaces" in id_asset.keys():
-                        for ip in id_asset["interfaces"]:
-                            interfaces.append(ip["interfaceIPAddress"])
-                            # set asset to none and try to find one in database
-                            asset = None
-                            if ip["interfaceIPAddress"]:
-                                asset = db.assets.find_one({"$or": [
-                                    {"siteId": str(s["_id"]), "assetName": {"$regex": id_asset["assetName"], "$options": "i"}, "deviceType": {"$ne": "VMGuest"}},
-                                    {"SiteId": str(s["_id"]), "ipAddresses": ip["interfaceIPAddress"], "deviceType": {"$ne": "VMGuest"}}
-                                ]})
-                                if asset:
-                                    break
                     if asset:
-                        upsert = False
+                        print("found asset")
                     else:
-                        dict = {
-                            "assetName": id_asset["assetName"],
-                            "ipAddresses": list(set(interfaces)),
-                            "natIp": "",
-                            "status": "active",
-                            "indDefId": str(id_asset["assetUuid"]),
-                            "siteId": str(s["_id"]),
-                            'os' : {
-                                'manufacturer' : "",
-                                'name' : "",
-                                'architecture' : "",
-                                'lastBootTime' : 0,
-                                'buildNumber' : "",
-                                'releaseId' : "",
-                                'servicePackMajorVersion' : 0,
-                                'servicePackMinorVersion': 0,
-                                'locale' : "",
-                                'language' : "",
-                                'needsReboot' : False
-                            },
-                            'system' : {
-                                'name' : "",
-                                'manufacture' : "",
-                                'model' : "",
-                                'biosSerialNumber' : "",
-                                'serialNumber' : "",
-                                'domain' : "",
-                                'domainRole' : "",
-                                'numberOfProcessors' : 0,
-                                'totalPhysicalMemory' : 0,
-                                'virtualMachine' : False,
-                                'chassisType' : ""
-                            },
-                            "updated": datetime.timestamp(datetime.today())
-                        }
-                        db.assets.insert_one(dict)
+                        if "interfaces" in id_asset.keys():
+                            for ip in id_asset["interfaces"]:
+                                interfaces.append(ip["interfaceIPAddress"])
+                                # set asset to none and try to find one in database
+                                asset = None
+                                if ip["interfaceIPAddress"]:
+                                    asset = db.assets.find_one({"$or": [
+                                        {"siteId": str(s["_id"]), "assetName": {"$regex": id_asset["assetName"], "$options": "i"}, "deviceType": {"$ne": "VMGuest"}},
+                                        {"SiteId": str(s["_id"]), "ipAddresses": ip["interfaceIPAddress"], "deviceType": {"$ne": "VMGuest"}}
+                                    ]})
+                                    if asset:
+                                        print("found asset")
+                    # found asset to update
+                    if asset:
+                        db.assets.update_one({"indDefId": str(id_asset["assetUuid"])}, {"$set": {"assetName": id_asset["assetName"], "indDefUpdated": datetime.timestamp(datetime.today())}})
+                    # set up new object to insert
+                    else:
+                        new_asset = deepcopy(asset)
+                        new_asset["assetName"] = id_asset["assetName"]
+                        new_asset["ipAddresses"] = list(set(interfaces))
+                        new_asset["indDefId"] = str(id_asset["assetUuid"])
+                        new_asset["siteId"] = str(s["_id"])
+                        new_asset["updated"] = datetime.timestamp(datetime.today())
+                        new_asset["indDefUpdated"] = datetime.timestamp(datetime.today())
+                        db.assets.insert_one(new_asset)
 
     def process_networkSheet():
         print( "Processing Network Sheet Objects")
@@ -125,7 +99,6 @@ def dump_assets():
         def ninjaToAssetSync():
             print( "Syncing NinjaOne Assets")
             for d in list(db.ninja.find()):
-                print(d["id"])
                 site = next(filter(lambda x: x['ninjaLocation'] == str( d['locationId'] ), sites), None)
                 siteId = str(site['_id']) if site else ""
 
@@ -211,7 +184,7 @@ def dump_assets():
                 db.assets.update_one({'_id' : v['_id']}, {'$set' : {'vmHost' : vmHost, 'vmOS' : vmOS}})
             
         ninjaToAssetSync()
-        vmToAssetSync()
+        # vmToAssetSync()
 
         finish = time.time()
         difference = (finish - start ) / 60

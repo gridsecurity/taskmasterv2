@@ -96,6 +96,11 @@ def sync_asset_patches():
         patchable_ids = list(map(lambda x: x["_id"], patchable_assets))
         patched_ids = list(map(lambda x: x["_id"], patched_assets))
         missing_asset_ids = list(set(patchable_ids) - set(patched_ids))
+        body = """
+        <p>The attached assets did not provide pending or installed patch data.</p>
+        <p>On Windows systems, review the patch reporting scheduled task history. (Get-ScheduledTaskInfo -TaskName "gs-wu-reporting")</p>
+        <p>On Linux systems review the linux udpates service journal. (sudo journalctl -u gs-lnx-updates.service)</p>
+        """
         if len(missing_asset_ids) > 0:
             # submit new incident ticket
             db.tickets.insert_one({
@@ -105,8 +110,8 @@ def sync_asset_patches():
                 "severity": 4,
                 "incident_type": "",
                 "sites": [s],
-                "subject": "Assets that did not check in for patches",
-                "body": "<p>The attached assets did not create xml or txt in gs-repo01. Please check devices and make sure they are checking in to gs-repo01.</p>",
+                "subject": "Failed check in patches for assets",
+                "body": body,
                 "assets": list(map(lambda x: str(x), missing_asset_ids)),
                 "type": "incident",
                 "status": "new",

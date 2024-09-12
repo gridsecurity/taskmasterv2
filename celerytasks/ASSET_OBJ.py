@@ -73,7 +73,9 @@ asset = { # empty asset object to build off of, prevents keyerrors going forward
         'offline' : True,
         'lastLoggedInUser' : "",
         'lastContact' : "",
+        "patchMgmt": False,
         'lastUpdate' : "", # Last time the object was updated by Ninja
         'lastModified' : "", # Last time the object was updated by Auvik
-        'lastUpdateByUser' : "" # Last time the object was updated
+        'lastUpdateByUser' : "", # Last time the object was updated
+        'indDefUpdated': "",
 }
