@@ -184,7 +184,7 @@ def dump_assets():
                 db.assets.update_one({'_id' : v['_id']}, {'$set' : {'vmHost' : vmHost, 'vmOS' : vmOS}})
             
         ninjaToAssetSync()
-        # vmToAssetSync()
+        vmToAssetSync()
 
         finish = time.time()
         difference = (finish - start ) / 60
