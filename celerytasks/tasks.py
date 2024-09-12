@@ -367,8 +367,6 @@ def splunk_cloud_assets():
 
 @shared_task(name="cisa_report")
 def process_cisa_report():
-    mailbox = EmailBox("reports@gridsec.com", "Inbox")
-
     mailbox = CISABox('reports@gridsec.com', "Inbox")
     request_url = 'https://gridsec.webhook.office.com/webhookb2/765cfca8-8ff7-42a5-b455-50802ac57775@9542b69d-0d8b-4244-8f4f-debecdbdc2b5/IncomingWebhook/c68585d562194ba4841985d656f11986/096bc56c-47ed-4dce-a63a-5bb9c1a57a08'
     mailbox.send_message(request_url, "Running CISA Report")
