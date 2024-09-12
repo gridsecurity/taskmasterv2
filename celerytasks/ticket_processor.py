@@ -171,7 +171,7 @@ class TicketProcessor:
         if self.m.sender.address in ["falcon@crowdstrike.com", "noreply+api.alerter@sbenergy.logicmonitor.com"]:
             dict = self.setDict("alert")
             # create splunk log
-            if self.m.sender.address == "alerts@gridsec.com":
+            if self.m.sender.address == "alerts@splunkcloud.com":
                 create_splunk_log(self.m)
             self.create_ticket(dict)
             return
