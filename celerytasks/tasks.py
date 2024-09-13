@@ -297,7 +297,7 @@ def sync_patches():
 @shared_task(name="splunk_cloud_assets")
 def splunk_cloud_assets():
     print("getting assets")
-    
+    token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWwiLCJpZHAiOiJTcGx1bmsiLCJqdGkiOiIzYjJiNjJkZTc4YjBhYzljNjY5YmE1MGY2MTE1OTdlYTBmMjIwZDFjYzRmMzRiYTIzNzEyMTczNmJhZDU0YjZmIiwiaWF0IjoxNzI0ODcxMDUxLCJleHAiOjE3NTY0MDcwNTEsIm5iciI6MTcyNDg3MTA1MX0.dXSKuqus7qu-tCdq9iw_0low3wgnlNaBZ_ALqxBFvo--puCbjD3QyfhVO2ExH4YGTkrocoFPyAMBlfhTIih3Ag"
     sites = list(db.sites.find())
     
     def popId(l):
@@ -311,28 +311,37 @@ def splunk_cloud_assets():
         print("sending data")
         url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
         headers = {
-            "Authorization": "Splunk 1cca1e88-3629-4bea-82bf-9947b215059c",
+            "Authorization": f"Splunk {token}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
         res = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
         print(res.status_code)
         print(res.text)
+    for s in sites:
+        for a in list(db.assets.find({"siteId": str(s["_id"])})):
+            a["id"] = str(a.pop("_id"))
+            a["site_name"] = s["site"]
+            a["ip"] = a["ipAddresses"]
+            if "latitude" in s:
+                a["lat"] = s["latitude"]
+                a["long"] = s["longitude"]
+            splunk_api_request(a)
         
-    for a in popId(db.auvik.find()):
-        site = next(filter(lambda x: x['auvikTenant'] == a['relationships']['tenant']['data']['id'], sites), None)
-        site_name = site["site"] if site else ""
-        a["site_name"] = site_name
-        data = {"event": a}
-        print("sending auvik")
-        splunk_api_request(data)
+    # for a in popId(db.auvik.find()):
+    #     site = next(filter(lambda x: x['auvikTenant'] == a['relationships']['tenant']['data']['id'], sites), None)
+    #     site_name = site["site"] if site else ""
+    #     a["site_name"] = site_name
+    #     data = {"event": a}
+    #     print("sending auvik")
+    #     splunk_api_request(data)
         
-    for n in popId(db.ninja.find()):
-        site = next(filter(lambda x: x['ninjaLocation'] == str( n['locationId'] ), sites), None)
-        site_name = site["site_name"] if site else ""
-        n["site_name"] = site_name
-        data = {"event": n}
-        print("sending ninja one")
-        splunk_api_request(data)
+    # for n in popId(db.ninja.find()):
+    #     site = next(filter(lambda x: x['ninjaLocation'] == str( n['locationId'] ), sites), None)
+    #     site_name = site["site_name"] if site else ""
+    #     n["site_name"] = site_name
+    #     data = {"event": n}
+    #     print("sending ninja one")
+    #     splunk_api_request(data)
         
     # for i in popId(db.id_assets.find().limit(20)):
     #     data = {"event": i}
