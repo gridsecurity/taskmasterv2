@@ -196,7 +196,7 @@ if environment == "prodcluster":
         },
         "pull_patches": {
             "task": "pull_patches",
-            "schedule": crontab(hour=1, minute=0)
+            "schedule": crontab(hour=23, minute=0)
         },
         # "sync_okta_groups": {
         #     "task": "sync_okta_groups",

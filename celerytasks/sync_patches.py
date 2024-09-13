@@ -91,7 +91,8 @@ def sync_asset_patches():
                 db.assets.update_one({"_id": asset["_id"]}, {"$set": {key: patches}})
                 patched_assets.append(asset)
                 # remove from server
-                
+                sftp = ssh.open_sftp()
+                sftp.remove(f'patch_repo/{s}/{f}')
         # compare list
         patchable_ids = list(map(lambda x: x["_id"], patchable_assets))
         patched_ids = list(map(lambda x: x["_id"], patched_assets))
