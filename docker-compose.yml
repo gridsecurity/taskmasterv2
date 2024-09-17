@@ -19,6 +19,8 @@ services:
             - CELERY_BACKEND=redis://redis:6379/0
         depends_on:
             - redis
+        restart: always
+
     celery:
         build: .
         command: celery -A core worker -B -l DEBUG
@@ -32,6 +34,7 @@ services:
         depends_on:
             - django
             - redis
+        restart: always
     # pgdb:
     #     image: postgres
     #     container_name: pgdb
@@ -43,6 +46,7 @@ services:
     #         - pgdata:/var/lib/postgresql/data/
     redis:
         image: "redis:alpine"
+        restart: always
         
 volumes:
     pgdata:
