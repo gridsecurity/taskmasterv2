@@ -34,10 +34,13 @@ class EmailBox:
             print("adding to existing conversation")
             query = self.account.mailbox(self.email).new_query().on_attribute('conversation_id').equals(conversation_id)
             messages = self.account.mailbox(self.email).get_messages(query=query)
-            for m in messages:
-                lastMessage = m
-            print(lastMessage.object_id)
-            reply = lastMessage.reply()
+            # reverse list and try last message until it works
+            for m in reversed(list(messages)):
+                try:
+                    reply = m.reply()
+                    break
+                except:
+                    pass
             # create clear methods
             reply.to.clear()
             reply.cc.clear()
