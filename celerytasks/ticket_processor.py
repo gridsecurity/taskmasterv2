@@ -65,7 +65,8 @@ class TicketProcessor:
             pager.createIncident(dict['requester'], dict['number'], "Sev 1 incident")
         # upload attachments
         if self.m.has_attachments:
-            self.upload_sftp(str(dict["number"]))
+            body = self.upload_sftp(str(dict["number"]))
+            dict["body"] = body
         if dict["type"] != "alert":
             # send reply email
             print("sending reply email")
@@ -116,7 +117,6 @@ class TicketProcessor:
         else:
             soup = str(soup) 
         print(f"soup: {soup}")
-        db.tickets.update_one({"_id": ObjectId(self.id)}, {"$set": {"body":soup}})
         return soup
 
     def message_check(self):
