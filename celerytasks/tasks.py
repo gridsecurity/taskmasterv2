@@ -433,7 +433,8 @@ def send_emails():
                 conversation_id = email["conversation_id"]
             except:
                 conversation_id = None
-            mailbox.send_email(email['target'], email['subject'], html, cc, bcc, attachment=attachment, conversation_id=conversation_id)
+            if "standard_change@gridsec.com" not in email["target"]:
+                mailbox.send_email(email['target'], email['subject'], html, cc, bcc, attachment=attachment, conversation_id=conversation_id)
             # update email log
             db.emailLog.update_one({"_id":email["_id"]}, {"$set":{"status":"sent", "sentDate": datetime.timestamp(datetime.today())}})
             count += 1
