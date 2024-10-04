@@ -63,7 +63,6 @@ class EmailBox:
                     try:
                         if at['source'] == 's3':
                             attach = s3.download_file(at["path"])
-                            print(attach)
                             in_memory_attachment = (attach, at['filename'])
                             reply.attachments.add([in_memory_attachment])
                     except:
@@ -88,16 +87,16 @@ class EmailBox:
                 try:
                     if at['source'] == 's3':
                         attach = s3.download_file(at["path"])
-                        print(attach)
                         in_memory_attachment = (attach, at['filename'])
                         reply.attachments.add([in_memory_attachment])
                 except:
                     pass
         reply.save_draft()
         try:
-            m.send()
+            reply.send()
         except:
             pass
+        return reply
 
 
 class NRIBox:
