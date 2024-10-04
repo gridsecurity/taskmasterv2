@@ -244,7 +244,8 @@ class TicketProcessor:
             "to": to,
             "cc": cc,
             "datetime": datetime.timestamp(datetime.today()),
-            "noteType": "external"
+            "noteType": "external",
+            "conversation_id": self.m.conversation_id
         })
         # set converstaion id on ticket update
         updateDict = {
