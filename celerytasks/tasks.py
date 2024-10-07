@@ -297,8 +297,8 @@ def sync_patches():
 @shared_task(name="splunk_cloud_assets")
 def splunk_cloud_assets():
     print("getting assets")
-    token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWwiLCJpZHAiOiJTcGx1bmsiLCJqdGkiOiIzYjJiNjJkZTc4YjBhYzljNjY5YmE1MGY2MTE1OTdlYTBmMjIwZDFjYzRmMzRiYTIzNzEyMTczNmJhZDU0YjZmIiwiaWF0IjoxNzI0ODcxMDUxLCJleHAiOjE3NTY0MDcwNTEsIm5iciI6MTcyNDg3MTA1MX0.dXSKuqus7qu-tCdq9iw_0low3wgnlNaBZ_ALqxBFvo--puCbjD3QyfhVO2ExH4YGTkrocoFPyAMBlfhTIih3Ag"
-    sites = list(db.sites.find())
+    token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWxfYXNzZXRzIiwiaWRwIjoiU3BsdW5rIiwianRpIjoiMmViYTUzODk3N2M5ZmQyYzAxYzI4MmIwOTYxYTIzN2U1MDExYTI3NTE2YTAzNmYzYmJmMjExNWY0YjVlMDNmNCIsImlhdCI6MTcyNzk4ODQzMSwiZXhwIjoxNzU5MDkyNDMxLCJuYnIiOjE3Mjc5ODg0MzF9.cRKMs2OEaWcVnK6kEXRt8T7ISjZgD6Bu6Cxt6L6C9gZjSWEdsc1UBbqcDyu4FlaikHFtl0xb6RHSIZQqkYDVCg"
+    sites = list(db.sites.find({"site": "arcc"}))
     
     def popId(l):
         list = []
@@ -308,8 +308,8 @@ def splunk_cloud_assets():
         return list
     
     def splunk_api_request(data):
-        print("sending data")
-        url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
+        print(f"sending data {data["assetName"]}")
+        url = "https://http-inputs.gridsec.splunkcloud.com/services/collector/event"
         headers = {
             "Authorization": f"Splunk {token}",
             "Content-Type": "application/x-www-form-urlencoded"
@@ -317,8 +317,9 @@ def splunk_cloud_assets():
         res = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
         print(res.status_code)
         print(res.text)
+        
     for s in sites:
-        for a in list(db.assets.find({"siteId": str(s["_id"])})):
+        for a in list(db.assets.find({"siteId": str(s["_id"])}).limit(10)):
             a["id"] = str(a.pop("_id"))
             a["site_name"] = s["site"]
             a["ip"] = a["ipAddresses"]
@@ -400,45 +401,47 @@ def send_emails():
     failedCount = 0
     mailbox = EmailBox('tickets@gridsec.com', 'Inbox')
     for email in emails:
+        if "standard_change@gridsec.com" in email["target"]:
+            db.emailLog.delete_one({"_id": email["_id"]})
+            pass
         # try:
             # send email
-            try:
-                if "startDate" in email["dict"].keys():
-                    email["dict"]["startDate"] = strftime('%Y-%m-%d %H:%M:%S', localtime(int(email["dict"]["startDate"])))
-            except:
-                pass
-            try:
-                if "endDate" in email["dict"].keys():
-                    email["dict"]["endDate"] = strftime('%Y-%m-%d %H:%M:%S', localtime(int(email["dict"]["endDate"])))
-            except:
-                pass
-            template_loader = FileSystemLoader("emailadmin/templates/emailadmin")
-            templateEnv = Environment(loader=template_loader)
-            template = templateEnv.get_template(email["template"])
-            html = template.render(email["dict"])
-            # try and get options
-            try:
-                cc=email["cc"]
-            except:
-                cc=None
-            try:
-                bcc=email["bcc"]
-            except:
-                bcc=None
-            try:
-                attachment=email["attachment"]
-            except:
-                attachment=None
-            try:
-                conversation_id = email["conversation_id"]
-            except:
-                conversation_id = None
-            if "standard_change@gridsec.com" not in email["target"]:
-                mailbox.send_email(email['target'], email['subject'], html, cc, bcc, attachment=attachment, conversation_id=conversation_id)
-            # update email log
-            db.emailLog.update_one({"_id":email["_id"]}, {"$set":{"status":"sent", "sentDate": datetime.timestamp(datetime.today())}})
-            count += 1
-            print("sent email")
+        try:
+            if "startDate" in email["dict"].keys():
+                email["dict"]["startDate"] = strftime('%Y-%m-%d %H:%M:%S', localtime(int(email["dict"]["startDate"])))
+        except:
+            pass
+        try:
+            if "endDate" in email["dict"].keys():
+                email["dict"]["endDate"] = strftime('%Y-%m-%d %H:%M:%S', localtime(int(email["dict"]["endDate"])))
+        except:
+            pass
+        template_loader = FileSystemLoader("emailadmin/templates/emailadmin")
+        templateEnv = Environment(loader=template_loader)
+        template = templateEnv.get_template(email["template"])
+        html = template.render(email["dict"])
+        # try and get options
+        try:
+            cc=email["cc"]
+        except:
+            cc=None
+        try:
+            bcc=email["bcc"]
+        except:
+            bcc=None
+        try:
+            attachment=email["attachment"]
+        except:
+            attachment=None
+        try:
+            conversation_id = email["conversation_id"]
+        except:
+            conversation_id = None
+        reply = mailbox.send_email(email['target'], email['subject'], html, cc, bcc, attachment=attachment, conversation_id=conversation_id)
+        # update email log
+        db.emailLog.update_one({"_id":email["_id"]}, {"$set":{"status":"sent", "sentDate": datetime.timestamp(datetime.today())}})
+        count += 1
+        print("sent email")
         # except Exception as e:
         #     print(e)
         #     failedCount += 1
