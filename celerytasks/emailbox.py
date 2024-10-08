@@ -72,7 +72,7 @@ class EmailBox:
             print("create new message")
             m = self.account.new_message(resource=self.email)
             m.subject = subject
-            m.body = body
+            m.body = str(body)
             # add to users
             m.to.add(list(set(targets)))
             if cc:
