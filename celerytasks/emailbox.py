@@ -55,8 +55,6 @@ class EmailBox:
                 for bc in bcc:
                     print('adding', bc)
                     reply.bcc.add(bc.replace(" ", ""))
-            # save the draft then send out
-            reply.save_draft()
             # add attachment
             if attachment:
                 s3 = S3_DB()
@@ -92,7 +90,10 @@ class EmailBox:
                         reply.attachments.add([in_memory_attachment])
                 except:
                     pass
-        reply.save_draft()
+        while True:
+            res = reply.save_draft()
+            if res == True:
+                break
         try:
             reply.send()
         except:
