@@ -44,7 +44,8 @@ class EmailBox:
             # create clear methods
             reply.to.clear()
             reply.cc.clear()
-            reply.body = body
+            reply.bcc.clear()
+            reply.body = str(body)
             reply.to.add(list(map(lambda x: x.replace(" ", ""), targets)))
             if cc != None:
                 for c in cc:
