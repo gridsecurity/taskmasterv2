@@ -43,7 +43,7 @@ def dump_assets():
                                         print("found asset")
                     # found asset to update
                     if asset:
-                        db.assets.update_one({"indDefId": str(id_asset["assetUuid"])}, {"$set": {"assetName": id_asset["assetName"], "indDefUpdated": datetime.timestamp(datetime.today())}})
+                        db.assets.update_one({"_id": asset["_id"]}, {"$set": {"assetName": id_asset["assetName"], "indDefId": str(id_asset["assetUuid"]), "indDefUpdated": datetime.timestamp(datetime.today())}})
                     # set up new object to insert
                     else:
                         new_asset = deepcopy(asset)
@@ -51,6 +51,7 @@ def dump_assets():
                         new_asset["ipAddresses"] = list(set(interfaces))
                         new_asset["indDefId"] = str(id_asset["assetUuid"])
                         new_asset["siteId"] = str(s["_id"])
+                        new_asset["status"] = "active"
                         new_asset["updated"] = datetime.timestamp(datetime.today())
                         new_asset["indDefUpdated"] = datetime.timestamp(datetime.today())
                         db.assets.insert_one(new_asset)
@@ -232,12 +233,12 @@ def dump_assets():
         print(difference)
 
     
-    process_ninja()
-    process_auvik()
+    # process_ninja()
+    # process_auvik()
     pull_id()
     # process_networkSheet()
 
-    request_url = 'https://gridsec.webhook.office.com/webhookb2/765cfca8-8ff7-42a5-b455-50802ac57775@9542b69d-0d8b-4244-8f4f-debecdbdc2b5/IncomingWebhook/c68585d562194ba4841985d656f11986/096bc56c-47ed-4dce-a63a-5bb9c1a57a08'
-    messageTeams = pymsteams.connectorcard(request_url)
-    messageTeams.text('Finished Processing Asset Dump')
-    messageTeams.send()
+    # request_url = 'https://gridsec.webhook.office.com/webhookb2/765cfca8-8ff7-42a5-b455-50802ac57775@9542b69d-0d8b-4244-8f4f-debecdbdc2b5/IncomingWebhook/c68585d562194ba4841985d656f11986/096bc56c-47ed-4dce-a63a-5bb9c1a57a08'
+    # messageTeams = pymsteams.connectorcard(request_url)
+    # messageTeams.text('Finished Processing Asset Dump')
+    # messageTeams.send()
