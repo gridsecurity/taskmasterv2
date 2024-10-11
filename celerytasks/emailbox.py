@@ -8,6 +8,7 @@ from .cisa_processor import get_embedded_files
 import pandas as pd
 from datetime import datetime
 from .s3 import S3_DB
+import time
 
 import os
 
@@ -94,6 +95,7 @@ class EmailBox:
             res = reply.save_draft()
             if res == True:
                 break
+            time.sleep(2)
         try:
             reply.send()
         except:
