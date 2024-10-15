@@ -233,8 +233,8 @@ def dump_assets():
         print(difference)
 
     
-    # process_ninja()
-    # process_auvik()
+    process_ninja()
+    process_auvik()
     pull_id()
     # process_networkSheet()
 
