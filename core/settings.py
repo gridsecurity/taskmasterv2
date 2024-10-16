@@ -186,6 +186,10 @@ if environment == "prodcluster":
         #     "task": "access_ticket_provisions",
         #     "schedule": crontab(minute="*/1")
         # },
+        "splunk_cloud_assets": {
+            "task": "splunk_cloud_assets",
+            "schedule": crontab(hour=5, minute=0)
+        },
         "cisa_repot": {
             "task": "cisa_report",
             "schedule": crontab(hour=8, minute=1)

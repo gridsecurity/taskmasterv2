@@ -220,9 +220,15 @@ def dump_assets():
             a['siteId'] = siteId if not a['siteId'] else a['siteId']
             a['ipAddresses'] = d['attributes']['ipAddresses'] if a['ipAddresses'] == [] else a['ipAddresses']
             a['assetName'] = d['attributes']['deviceName'] if a['assetName'] == "" else a['assetName']
-            a['deviceType'] = d['attributes']['deviceType'] if not a['deviceType'] else a['deviceType']
-            if '@' in d['attributes']['deviceName']:
-                a['deviceType'] = "unknown" if not a['deviceType'] else a['deviceType']
+            try:
+                a['deviceType'] = d['attributes']['deviceType'] if not a['deviceType'] else a['deviceType']
+            except:
+                a["deviceType"] = "unknown"
+            try:
+                if '@' in d['attributes']['deviceName']:
+                    a['deviceType'] = "unknown" if not a['deviceType'] else a['deviceType']
+            except:
+                    a["deviceType"] = "unknown"
             a["lastUpdateByUser"] = datetime.timestamp(datetime.today()) # Portals last modified timestamp
             db.assets.update_one({"_id": a["_id"]}, {"$set": a}) if '_id' in a.keys() else db.assets.update_one({"auvikId": d["id"]}, {"$set": a}, upsert=upsert)
         

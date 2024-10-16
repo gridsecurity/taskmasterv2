@@ -166,7 +166,7 @@ def id_asset_dump():
                     locations.append(prop["value"])
     ids = []
     # update location list
-    db.accessList.update_one({"name": "id_asset_locations"}, {"$set": {"locations": locations}})
+    # db.accessList.update_one({"name": "id_asset_locations"}, {"$set": {"locations": locations}})
     today_date = datetime.timestamp(datetime.today())
     for location in locations:
         total_asset_count = defender.get_location_asset_count(location)
@@ -300,12 +300,6 @@ def splunk_cloud_assets():
     # token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWxfYXNzZXRzIiwiaWRwIjoiU3BsdW5rIiwianRpIjoiMmViYTUzODk3N2M5ZmQyYzAxYzI4MmIwOTYxYTIzN2U1MDExYTI3NTE2YTAzNmYzYmJmMjExNWY0YjVlMDNmNCIsImlhdCI6MTcyNzk4ODQzMSwiZXhwIjoxNzU5MDkyNDMxLCJuYnIiOjE3Mjc5ODg0MzF9.cRKMs2OEaWcVnK6kEXRt8T7ISjZgD6Bu6Cxt6L6C9gZjSWEdsc1UBbqcDyu4FlaikHFtl0xb6RHSIZQqkYDVCg"
     sites = list(db.sites.find({}))
     token = "1cca1e88-3629-4bea-82bf-9947b215059c"
-    def popId(l):
-        list = []
-        for i in l:
-            i.pop("_id")
-            list.append(i)
-        return list
     
     def splunk_api_request(data):
         print(f"sending data {data["assetName"]}")
