@@ -11,6 +11,7 @@ urlpatterns = [
     re_path(r'^celery/ninja_one_dump/$', views.ninja_one_dumps, name="ninja_one_dump"),
     re_path(r'^celery/auvik_dump/$', views.auvik_dumps, name="auvik_dumps"),
     re_path(r'^celery/dump_assets/$', views.dump_assets, name="dump_assets"),
+    re_path(r'^celery/global_software_creations', views.global_software_creations, name="global_software_creations"),
     re_path(r'^celery/pull_patches/$', views.pull_patches, name="pull_patches"),
     re_path(r'^celery/nri_email/$', views.nri_email_parse, name='nri_email'),
     re_path(r'^celery/pagerduty/$', views.alert_pagerduty, name='pagerduty'),
@@ -22,4 +23,5 @@ urlpatterns = [
     re_path(r'^celery/clear_temp_folder_s3', views.clear_temp_folder_s3, name="clear_temp_folder_s3"),
     re_path(r'^celery/sync_okta_groups', views.sync_okta_groups, name="sync_okta_groups"),
     re_path(r'^celery/sync_db', views.sync_prod_to_preprod, name="sync_db"),
+    
 ]

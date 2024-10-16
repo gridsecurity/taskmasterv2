@@ -71,3 +71,7 @@ def sync_okta_groups(request):
 def sync_prod_to_preprod(request):
     sync_db()
     return HttpResponse("Finished")
+
+def global_software_creations(request):
+    global_software_creation()
+    return HttpResponse("Finished")

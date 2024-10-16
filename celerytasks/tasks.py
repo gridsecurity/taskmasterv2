@@ -24,7 +24,7 @@ from .asset_dump import dump_assets
 import time
 from .ninja_one import NinjaOne
 from .auvik import Auvik
-
+from .global_software_dump import global_software_dump
 import shutil
 from .splunk_to_repsol import splunk_to_repsol
 from .okta_group_sync import okta_group_sync
@@ -265,6 +265,95 @@ def auvik_dump():
     difference = (finish - start ) / 60
     print(difference)
 
+@shared_task(name="global_software_creation")
+def global_software_creation():
+    collections = [
+        "id_assets", 
+        # "auvik", 
+        # "ninja"
+        ]
+    collection_fields = {
+            # "auvik": {
+            #     "fields":[
+            #     {
+            #         "field":"name",
+            #         "selection":"assetDetails.name"
+            #     }
+            # ]
+            # },
+            "id_assets":{
+                "fields":[
+                # {
+                #     "field":"name",
+                #     "selection":"assetDetails.name"
+                # },
+                {
+                    "field":"name",
+                    "selection":"software.name"
+                }
+            ]
+            },
+            # "ninja":{
+            #     "fields":[
+            #     {
+            #         "field":"name",
+            #         "selection":"assetDetails.name"
+            #     }
+            # ]
+            # }
+            
+        }
+    software_dict = {}
+    for col in collections:
+        if col in collection_fields:
+            software_entries = global_software_dump(col, collection_fields[col]['fields'])
+            for entry in software_entries:
+                key = (entry['name'].lower(), entry['source'].lower())
+                if key not in software_dict:
+                    software_dict[key] = {
+                        "name": entry["name"],
+                        "source": entry["source"],
+                        "assets": set(entry["assets"]),
+                        "last_seen": entry["last_seen"],
+                        "dateCreated": entry["dateCreated"]
+                    }
+                    for k, v in entry.items():
+                        if k not in ["name", "source", "assets", "last_seen", "dateCreated"]:
+                            software_dict[key][k] = v
+                else:
+                    software_dict[key]["assets"].update(entry["assets"])
+                    if entry["last_seen"] > software_dict[key]["last_seen"]:
+                        software_dict[key]["last_seen"] = entry["last_seen"]
+                    for k, v in entry.items():
+                        if k not in ["name", "source", "assets", "last_seen", "dateCreated"]:
+                            software_dict[key][k] = v
+    global_software_list = []
+    for entry in software_dict.values():
+        software_object = {
+            "name": entry["name"],
+            "source": entry["source"],
+            "assets": list(entry["assets"]),
+            "last_seen": entry["last_seen"],
+            "dateCreated": entry["dateCreated"]
+        }
+        for key, value in entry.items():
+            if key not in ["name", "source", "assets", "last_seen", "dateCreated"]:
+                software_object[key] = value
+        global_software_list.append(software_object)
+    db.global_software.insert_many(global_software_list)
+ 
+    
+    
+    
+    
+    
+    
+    
+    # global_software_list = []
+    # for col in collections:
+    #     software_list = []
+    #     software_list = global_software_dump(col, collection_fields[col]['fields'])
+    #     global_software_list.append(software_list)
 
 @shared_task(name="asset_dump")
 def asset_dump():
