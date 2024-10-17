@@ -139,7 +139,6 @@ def dump_assets():
                 role = next(filter(lambda x: x['id'] == d['nodeRoleId'], roles), None)
                 a['nodeRoleName'] = role['name'] if 'name' in role.keys() else ""
                 a['nodeRoleDesc'] = role['description'] if 'description' in role.keys() else ""
-                a['siteId'] = siteId
 
                 # Pull all the interface details and update ipAddress list with valid IP's only.
                 a["interfaces"] = ninja.list_interfaces(a["ninjaId"])
