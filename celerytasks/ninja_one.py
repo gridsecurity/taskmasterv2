@@ -66,4 +66,9 @@ class NinjaOne:
         res = requests.get(url, headers=self.headers)
         if res.status_code == 200:
             return res.json()
+    def get_software_inventory(self):
+        url = self.base_url+"v2/queries/software"
+        res = requests.get(url, headers=self.headers)
+        if res.status_code == 200:
+            return res.json()
 

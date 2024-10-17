@@ -267,10 +267,11 @@ def auvik_dump():
 
 @shared_task(name="global_software_creation")
 def global_software_creation():
+    ninja = NinjaOne()
     collections = [
         "id_assets", 
         # "auvik", 
-        # "ninja"
+        "ninja"
         ]
     collection_fields = {
             # "auvik": {
@@ -282,6 +283,10 @@ def global_software_creation():
             # ]
             # },
             "id_assets":{
+                "db_link":{
+                    "assets_collection_selector":"indDefId",
+                    "selector":"assetUuid",  
+                },
                 "fields":[
                 # {
                 #     "field":"name",
@@ -293,20 +298,34 @@ def global_software_creation():
                 }
             ]
             },
-            # "ninja":{
-            #     "fields":[
-            #     {
-            #         "field":"name",
-            #         "selection":"assetDetails.name"
-            #     }
-            # ]
-            # }
+            "ninja":{
+                "db_link":{
+                    "assets_collection_selector":"ninjaId",
+                    "selector":"deviceId",  
+                },
+            "functions": [
+                {
+                    "forEach": False,
+                    "collection_comparison": "id",
+                    "response_comparison": "deviceId",
+                    "apiCall": ninja.get_software_inventory,
+                    "fields": [
+                        { 
+                            "field": "name", 
+                            "selection": "name" 
+                        }
+
+                    ]
+                }
+            ]
+            }
             
         }
     software_dict = {}
     for col in collections:
         if col in collection_fields:
-            software_entries = global_software_dump(col, collection_fields[col]['fields'])
+            config = collection_fields[col]
+            software_entries = global_software_dump(col, config)
             for entry in software_entries:
                 key = (entry['name'].lower(), entry['source'].lower())
                 if key not in software_dict:
@@ -327,8 +346,9 @@ def global_software_creation():
                     for k, v in entry.items():
                         if k not in ["name", "source", "assets", "last_seen", "dateCreated"]:
                             software_dict[key][k] = v
-    global_software_list = []
+    updated_items = 0
     for entry in software_dict.values():
+        updated_items += 1
         software_object = {
             "name": entry["name"],
             "source": entry["source"],
@@ -336,12 +356,9 @@ def global_software_creation():
             "last_seen": entry["last_seen"],
             "dateCreated": entry["dateCreated"]
         }
-        for key, value in entry.items():
-            if key not in ["name", "source", "assets", "last_seen", "dateCreated"]:
-                software_object[key] = value
-        global_software_list.append(software_object)
-    db.global_software.insert_many(global_software_list)
- 
+        print(f"Updated {updated_items}/{len(software_dict.values())} items  ")
+        db.global_software.update_one({"name":entry["name"], "source":entry["source"]}, {"$set":software_object}, upsert=True)
+
     
     
     
