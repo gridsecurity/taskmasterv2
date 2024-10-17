@@ -321,6 +321,8 @@ def splunk_cloud_assets():
                 a["lat"] = s["latitude"]
                 a["long"] = s["longitude"]
             splunk_api_request(a)
+    team = Teams('GS-Dev')
+    team.send_message("Finished splunk cloud push")
         
     # for a in popId(db.auvik.find()):
     #     site = next(filter(lambda x: x['auvikTenant'] == a['relationships']['tenant']['data']['id'], sites), None)
