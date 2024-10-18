@@ -299,29 +299,29 @@ def splunk_cloud_assets():
     team = Teams('GS-DEV')
     team.send_message("Starting splunk cloud push")
     # token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWxfYXNzZXRzIiwiaWRwIjoiU3BsdW5rIiwianRpIjoiMmViYTUzODk3N2M5ZmQyYzAxYzI4MmIwOTYxYTIzN2U1MDExYTI3NTE2YTAzNmYzYmJmMjExNWY0YjVlMDNmNCIsImlhdCI6MTcyNzk4ODQzMSwiZXhwIjoxNzU5MDkyNDMxLCJuYnIiOjE3Mjc5ODg0MzF9.cRKMs2OEaWcVnK6kEXRt8T7ISjZgD6Bu6Cxt6L6C9gZjSWEdsc1UBbqcDyu4FlaikHFtl0xb6RHSIZQqkYDVCg"
-    # sites = list(db.sites.find({}))
-    # token = "1cca1e88-3629-4bea-82bf-9947b215059c"
+    sites = list(db.sites.find({}))
+    token = "1cca1e88-3629-4bea-82bf-9947b215059c"
     
-    # def splunk_api_request(data):
-    #     print(f"sending data {data["assetName"]}")
-    #     url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
-    #     headers = {
-    #         "Authorization": f"Splunk {token}",
-    #         "Content-Type": "application/x-www-form-urlencoded"
-    #     }
-    #     res = requests.post(url, data=json.dumps({"event": data}), headers=headers, verify=False)
-    #     print(res.status_code)
-    #     print(res.text)
+    def splunk_api_request(data):
+        print(f"sending data {data["assetName"]}")
+        url = "https://http-inputs-gridsec.splunkcloud.com/services/collector/event"
+        headers = {
+            "Authorization": f"Splunk {token}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        res = requests.post(url, data=json.dumps({"event": data}), headers=headers, verify=False)
+        print(res.status_code)
+        print(res.text)
         
-    # for s in sites:
-    #     for a in list(db.assets.find({"siteId": str(s["_id"])})):
-    #         a["id"] = str(a.pop("_id"))
-    #         a["site_name"] = s["site"]
-    #         a["ip"] = a["ipAddresses"]
-    #         if "latitude" in s:
-    #             a["lat"] = s["latitude"]
-    #             a["long"] = s["longitude"]
-    #         splunk_api_request(a)
+    for s in sites:
+        for a in list(db.assets.find({"siteId": str(s["_id"])})):
+            a["id"] = str(a.pop("_id"))
+            a["site_name"] = s["site"]
+            a["ip"] = a["ipAddresses"]
+            if "latitude" in s:
+                a["lat"] = s["latitude"]
+                a["long"] = s["longitude"]
+            splunk_api_request(a)
     team = Teams('GS-DEV')
     team.send_message("Finished splunk cloud push")
         
