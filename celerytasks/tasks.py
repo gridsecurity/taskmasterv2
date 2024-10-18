@@ -7,7 +7,6 @@ import requests
 import os
 
 from .conn import *
-from .splunk_cloud_assets import splunk_cloud_assets_push
 from .emailbox import EmailBox, NRIBox
 from .ticket_processor import TicketProcessor
 from .teamsMessage import Teams
@@ -297,6 +296,8 @@ def sync_patches():
 @shared_task(name="splunk_cloud_assets")
 def splunk_cloud_assets():
     print("getting assets")
+    team = Teams('GS-Dev')
+    team.send_message("Starting splunk cloud push")
     # token = "eyJraWQiOiJzcGx1bmsuc2VjcmV0IiwiYWxnIjoiSFM1MTIiLCJ2ZXIiOiJ2MiIsInR0eXAiOiJzdGF0aWMifQ.eyJpc3MiOiJnc2FkbWluIGZyb20gc2gtaS0wOTFlMDUyOTYxMzBmYTc0MiIsInN1YiI6ImdzYWRtaW4iLCJhdWQiOiJwb3J0YWxfYXNzZXRzIiwiaWRwIjoiU3BsdW5rIiwianRpIjoiMmViYTUzODk3N2M5ZmQyYzAxYzI4MmIwOTYxYTIzN2U1MDExYTI3NTE2YTAzNmYzYmJmMjExNWY0YjVlMDNmNCIsImlhdCI6MTcyNzk4ODQzMSwiZXhwIjoxNzU5MDkyNDMxLCJuYnIiOjE3Mjc5ODg0MzF9.cRKMs2OEaWcVnK6kEXRt8T7ISjZgD6Bu6Cxt6L6C9gZjSWEdsc1UBbqcDyu4FlaikHFtl0xb6RHSIZQqkYDVCg"
     sites = list(db.sites.find({}))
     token = "1cca1e88-3629-4bea-82bf-9947b215059c"
