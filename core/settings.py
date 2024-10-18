@@ -188,7 +188,7 @@ if environment == "prodcluster":
         # },
         "splunk_cloud_assets": {
             "task": "splunk_cloud_assets",
-            "schedule": crontab(hour=7, minute=25)
+            "schedule": crontab(hour=7, minute=28)
         },
         "cisa_repot": {
             "task": "cisa_report",
